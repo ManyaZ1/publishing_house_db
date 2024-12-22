@@ -103,7 +103,7 @@ class PublishingHouseApp(tk.Tk):
         return;
 
 def main():
-    app = PublishingHouseApp()
+    app = PublishingHouseApp(db_path="../ourDB/publishing_house.db")
     app.mainloop()
 
     return;
