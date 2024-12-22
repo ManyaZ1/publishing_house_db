@@ -5,10 +5,10 @@ import tkinter as tk
 from tkinter import ttk
 
 # Import your modules from the mymodules directory
-from mymodules.database_manager import DatabaseManager
-from mymodules.table_tab import TableTab
-from mymodules.search_window import SearchWindow
-from mymodules.stats_window import StatsWindow
+from ourModules.database_manager import DatabaseManager
+from ourModules.table_tab import TableTab
+from ourModules.search_window import SearchWindow
+from ourModules.stats_window import StatsWindow
 
 class PublishingHouseApp(tk.Tk):
     def __init__(self, db_path="publishing_house.db"):
