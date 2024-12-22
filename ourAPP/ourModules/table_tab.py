@@ -1,4 +1,4 @@
-# mymodules/table_tab.py
+# ourModules/table_tab.py
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -21,6 +21,8 @@ class TableTab(ttk.Frame):
         self.create_treeview_section()
         self.create_form_section()
         self.populate_treeview()  # load data
+
+        return;
     
     def create_treeview_section(self):
         """Create a Treeview to show all rows for the given table."""
@@ -56,6 +58,8 @@ class TableTab(ttk.Frame):
         
         self.delete_btn = ttk.Button(self.btn_frame, text="Delete Selected", command=self.delete_selected)
         self.delete_btn.pack(side="left", padx=5)
+
+        return;
     
     def create_form_section(self):
         """A frame with Entry widgets for each column (for insert/edit)."""
@@ -79,6 +83,8 @@ class TableTab(ttk.Frame):
         # Insert / Update button
         self.action_btn = ttk.Button(self.form_frame, text="Insert", command=self.insert_record)
         self.action_btn.grid(row=len(self.columns_info), column=0, columnspan=2, pady=10)
+
+        return;
     
     def populate_treeview(self):
         """Load all data from the table into the treeview."""
@@ -88,6 +94,8 @@ class TableTab(ttk.Frame):
         rows = self.db_manager.fetchall(f'SELECT * FROM "{self.table_name}"')
         for r in rows:
             self.tree.insert("", "end", values=r)
+
+        return;
     
     def on_row_select(self, event):
         """When user selects a row from the tree, fill the form for editing."""
@@ -102,6 +110,8 @@ class TableTab(ttk.Frame):
         
         # Switch to "Update" mode
         self.action_btn.configure(text="Update", command=self.update_record)
+
+        return;
     
     def insert_record(self):
         """Gather data from entries and perform an INSERT."""
@@ -123,6 +133,8 @@ class TableTab(ttk.Frame):
             messagebox.showerror("Error", f"Insertion failed. IntegrityError: {e}")
         except Exception as e:
             messagebox.showerror("Error", f"Could not insert record.\n{e}")
+
+        return;
     
     def update_record(self):
         """Gather data from entries and perform an UPDATE on the selected record."""
@@ -167,17 +179,19 @@ class TableTab(ttk.Frame):
             self.action_btn.configure(text="Insert", command=self.insert_record)
         except Exception as e:
             messagebox.showerror("Error", f"Could not update record.\n{e}")
+
+        return;
     
     def delete_selected(self):
         """Delete the selected row from the DB."""
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "No row selected to delete.")
-            return
+            return;
         
         confirm = messagebox.askyesno("Confirm", "Are you sure you want to delete?")
         if not confirm:
-            return
+            return;
         
         row_data = self.tree.item(selected_item, 'values')
         
@@ -203,17 +217,23 @@ class TableTab(ttk.Frame):
             self.clear_form()
         except Exception as e:
             messagebox.showerror("Error", f"Could not delete record.\n{e}")
+
+        return;
     
     def edit_selected(self):
         """Manually trigger row selection logic for editing."""
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "No row selected to edit.")
-            return
+            return;
         self.on_row_select(None)
+
+        return;
     
     def clear_form(self):
         """Resets the entry fields to empty and resets the action button."""
         for col in self.entry_vars:
             self.entry_vars[col].set("")
         self.action_btn.configure(text="Insert", command=self.insert_record)
+
+        return;

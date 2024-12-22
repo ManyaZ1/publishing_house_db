@@ -1,4 +1,4 @@
-# mymodules/stats_window.py
+# ourModules/stats_window.py
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -41,16 +41,19 @@ class StatsWindow(tk.Toplevel):
         self.plot_frame.pack(expand=True, fill='both')
         
         self.canvas = None
+
+        return;
     
     def plot_book_stock(self):
         """Example: Query ΕΝΤΥΠΟ table for (τίτλος, stock), make a bar chart."""
         try:
-            rows = self.db_manager.fetchall('SELECT "τίτλος", "stock" FROM "ΕΝΤΥΠΟ"')
+            rows = self.db_manager.fetchall('SELECT "τίτλος", "stock"\
+                                             FROM "ΕΝΤΥΠΟ"')
             titles = [r[0] for r in rows]
             stocks = [r[1] for r in rows]
         except Exception as e:
             messagebox.showerror("Error", f"Could not fetch book stock:\n{e}")
-            return
+            return;
         
         fig, ax = plt.subplots(figsize=(6,4))
         ax.bar(titles, stocks, color='blue')
@@ -61,6 +64,8 @@ class StatsWindow(tk.Toplevel):
         plt.tight_layout()
         
         self.show_plot(fig)
+
+        return;
     
     def plot_money_earned(self):
         """
@@ -69,8 +74,7 @@ class StatsWindow(tk.Toplevel):
         """
         try:
             rows = self.db_manager.fetchall('''
-                SELECT strftime('%Y', "ημ. παραγγελίας") AS Year,
-                       SUM("χρηματικό ποσό") AS Total_Earned
+                SELECT strftime('%Y', "ημ. παραγγελίας") AS Year, SUM("χρηματικό ποσό") AS Total_Earned
                 FROM "ζητάει"
                 GROUP BY Year
                 ORDER BY Year
@@ -81,7 +85,7 @@ class StatsWindow(tk.Toplevel):
             
         except Exception as e:
             messagebox.showerror("Error", f"Could not fetch money earned:\n{e}")
-            return
+            return;
         
         fig, ax = plt.subplots(figsize=(6,4))
         ax.bar(years, sums, color='green')
@@ -92,6 +96,8 @@ class StatsWindow(tk.Toplevel):
         plt.tight_layout()
         
         self.show_plot(fig)
+
+        return;
     
     def show_plot(self, fig):
         """Embed the Matplotlib figure in the plot_frame."""
@@ -101,3 +107,5 @@ class StatsWindow(tk.Toplevel):
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(expand=True, fill='both')
+
+        return;

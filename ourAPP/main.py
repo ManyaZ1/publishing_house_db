@@ -61,6 +61,8 @@ class PublishingHouseApp(tk.Tk):
 
         # Clean up on close
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        return;
     
     def create_home_tab(self):
         """
@@ -81,24 +83,30 @@ class PublishingHouseApp(tk.Tk):
         label.pack(padx=10, pady=10, expand=True, fill='both')
         
         self.notebook.add(home_frame, text="Home")
+
+        return;
     
     def open_search_window(self):
         SearchWindow(self, self.db_manager)
+
+        return;
     
     def open_stats_window(self):
         StatsWindow(self, self.db_manager)
+
+        return;
 
     def on_closing(self):
         self.db_manager.close_connection()
         self.destroy()
 
+        return;
+
+def main():
+    app = PublishingHouseApp()
+    app.mainloop()
+
+    return;
 
 if __name__ == "__main__":
-    # If you need to create/populate the DB first, you can do it here.
-    # For example:
-    # if not os.path.exists("publishing_house.db"):
-    #     create_database("publishing_house.db", "schema.sql")
-    #     populate_database("publishing_house.db")
-    
-    app = PublishingHouseApp(db_path="../ourDB/publishing_house.db")
-    app.mainloop()
+    main()

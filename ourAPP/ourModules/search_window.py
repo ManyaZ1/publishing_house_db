@@ -1,4 +1,4 @@
-# mymodules/search_window.py
+# ourModules/search_window.py
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -73,6 +73,8 @@ class SearchWindow(tk.Toplevel):
         self.results_tree = ttk.Treeview(self.tree_frame, show='headings', yscrollcommand=self.scroll_y.set)
         self.results_tree.pack(side="left", fill="both", expand=True)
         self.scroll_y.config(command=self.results_tree.yview)
+
+        return;
     
     def on_table_selected(self, event):
         """Load column names for the chosen table."""
@@ -82,6 +84,8 @@ class SearchWindow(tk.Toplevel):
         self.cmb_column['values'] = col_names
         if col_names:
             self.cmb_column.current(0)
+
+        return;
     
     def run_search(self):
         """Build a SELECT query based on the user's inputs."""
@@ -108,6 +112,8 @@ class SearchWindow(tk.Toplevel):
             self.display_results(rows, table)
         except Exception as e:
             messagebox.showerror("Error", f"Search failed:\n{e}")
+
+        return;
     
     def display_results(self, rows, table_name):
         """Populate the results_tree with the query results."""
@@ -126,3 +132,5 @@ class SearchWindow(tk.Toplevel):
         
         for row in rows:
             self.results_tree.insert("", "end", values=row)
+        
+        return;
