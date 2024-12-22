@@ -35,6 +35,11 @@ class StatsWindow(tk.Toplevel):
         # Show Money Earned
         btn_money_earned = ttk.Button(btn_frame, text="Show Money Earned", command=self.plot_money_earned)
         btn_money_earned.pack(side="left", padx=5)
+
+        # Show Accounts Payable to Printing House
+        btn_accounts_payable = ttk.Button(btn_frame, text="Show Accounts Payable to Printing House",
+                                          command=self.plot_accounts_payable_printing_house)
+        btn_accounts_payable.pack(side="left", padx=5)
         
         # A frame to hold the matplotlib figure
         self.plot_frame = ttk.Frame(container)
@@ -92,6 +97,34 @@ class StatsWindow(tk.Toplevel):
         ax.set_xlabel('Year', fontsize=12)
         ax.set_ylabel('Money Earned', fontsize=12)
         ax.set_title('Money Earned by Year', fontsize=14)
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        
+        self.show_plot(fig)
+
+        return;
+
+    def plot_accounts_payable_printing_house(self):
+        try:
+            rows = self.db_manager.fetchall('''
+                SELECT strftime('%Y', "ημ. παραγγελίας") AS Year, SUM("κόστος") AS Total_Earned
+                FROM "παραγγέλνει"
+                GROUP BY Year
+                ORDER BY Year
+            ''')
+            # Each row is (Year, Total_Earned)
+            years = [r[0] if r[0] else "Unknown" for r in rows]
+            sums = [r[1] if r[1] else 0 for r in rows]
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not fetch money earned:\n{e}")
+            return;
+        
+        fig, ax = plt.subplots(figsize=(6,4))
+        ax.bar(years, sums, color='green')
+        ax.set_xlabel('Έτος', fontsize=12)
+        ax.set_ylabel('Συνολικό κόστος', fontsize=12)
+        ax.set_title('Κόστος τύπωσης εντύπων ανά έτος', fontsize=14)
         plt.xticks(rotation=45, ha="right")
         plt.tight_layout()
         
