@@ -100,5 +100,5 @@ if __name__ == "__main__":
     #     create_database("publishing_house.db", "schema.sql")
     #     populate_database("publishing_house.db")
     
-    app = PublishingHouseApp(db_path="publishing_house.db")
+    app = PublishingHouseApp(db_path="ourDB/publishing_house.db")
     app.mainloop()
