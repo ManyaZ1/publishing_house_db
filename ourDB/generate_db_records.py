@@ -3,22 +3,11 @@ import random
 from datetime import datetime, timedelta
 from time import sleep
 
-# Datasets for generating realistic names and titles
-first_names = ["Alan", "John", "Sarah", "Emily", "Michael", "Sophia", "Robert", "Jessica", "David", "Laura"]
-last_names = ["Wake", "Smith", "Johnson", "Brown", "Williams", "Taylor", "Anderson", "Lee", "Martinez", "Hernandez"]
-categories = ["Fiction", "Science Fiction", "Fantasy", "Biography", "Mystery", "History", "Children", "Romance"]
-collaborator_categories = ["Συγγραφέας", "Γραφίστας", "Επιμελητής", "Μεταφραστής"]
-printing_house_capabilities = ["Offset Printing", "Digital Printing", "Foil Stamping", "Custom Packaging Solutions", "Eco-Friendly Printing"]
-locations = ["Athens", "New York", "Paris", "Berlin", "Tokyo", "Sydney", "London", "Madrid", "Rome", "Toronto"]
-book_titles = [
-    "The Great Adventure", "Mysterious Island", "Forgotten Tales", "Space and Beyond", "Hidden Treasures", "The Last Dream",
-    "Echoes of Time", "Reflections of the Mind", "Under the Stars", "Wonders of the Universe"
-    ]
-bookstores_names = [
-    "The Book Nook", "Page Turners", "Chapters & Tales", "Novel Ideas", "Bound & Beyond", "The Reading Room", "Ink & Paper",
-    "The Literary Loft", "Village Books", "Cornerstone Books", "Riverstone Reads", "The Story House", "Turning Pages",
-    "City Reads", "The Dusty Cover", "Wordsworth Books", "The Quiet Corner", "Once Upon a Book", "The Bookmark", "Starlight Books"
-    ]
+# Διαβάζει τα δεδομένα από 1 αρχείο κειμένου και τα επιστρέφει ως λίστα (χρησιμοποιείτε για τα datasets)
+def read_data_from_file(file_path):
+    file_path = f"datasets/{file_path}"
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return [line.strip() for line in file.readlines()];
 
 def create_database(db_path, schema_file_path):
     with open(schema_file_path, 'r', encoding='utf-8') as schema_file:
@@ -29,7 +18,7 @@ def create_database(db_path, schema_file_path):
     cursor.executescript(schema_content)
     connection.commit()
     connection.close()
-    print("Database and tables created successfully!")
+    print("Η ΒΔ/πίνακες δημιουργήθηκαν επιτυχώς!\n")
 
     return;
 
@@ -46,12 +35,21 @@ def random_phone():
     return random.choice([random.randint(69_000_00000, 699_999_9999), random.randint(2651_000000, 2651_999999)]);
 
 def populate_database(db_path):
-    connection = sqlite3.connect(db_path)
-    cursor = connection.cursor()
+    # Datasets για τη δημιουργία ρεαλιστικών ονομάτων και τίτλων
+    first_names = read_data_from_file('first_names.txt')
+    last_names = read_data_from_file('last_names.txt')
+    categories = read_data_from_file('categories.txt')
+    collaborator_categories = ["Συγγραφέας", "Γραφίστας", "Επιμελητής", "Μεταφραστής"]
+    printing_house_capabilities = ["Offset Printing", "Digital Printing", "Foil Stamping",
+                                "Custom Packaging Solutions", "Eco-Friendly Printing"]
+    locations = read_data_from_file('locations.txt')
+    book_titles = read_data_from_file('book_titles.txt')
+    bookstores_names = read_data_from_file('bookstores_names.txt')
 
-    # ============================================================================================================================
-    # 1. ΣΥΝΕΡΓΑΤΗΣ (COLLABORATORS)
-    # ============================================================================================================================
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor() # Ο cursor είναι ένας δείκτης που δείχνει σε μια συγκεκριμένη γραμμή του πίνακα
+
+    # ---------- ΣΥΝΕΡΓΑΤΗΣ ---------- # Α.Φ.Μ., Ονομασία, Ειδίκευση, Σχόλια
     collaborator_afms = set()
     collaborators = []
     for _ in range(10):
@@ -66,22 +64,23 @@ def populate_database(db_path):
 
         collaborators.append((name, afm_value, random.choice(collaborator_categories), comments))
     
-    cursor.executemany('INSERT INTO "ΣΥΝΕΡΓΑΤΗΣ" ("ονομασία", "α.φ.μ.", "ειδίκευση", "σχόλια") VALUES (?, ?, ?, ?)', collaborators)
+    cursor.executemany(
+        'INSERT INTO "ΣΥΝΕΡΓΑΤΗΣ" ("ονομασία", "α.φ.μ.", "ειδίκευση", "σχόλια") \
+        VALUES (?, ?, ?, ?)', collaborators
+        ) # Στο VALUES (?, ?, ?, ?), τα ? είναι placeholders για τα πραγματικά δεδομένα που θα εισαχθοϋν!
 
-    # Grab the AFMs we just inserted! We will use them later!
+    # Βρες όλα τα ΑΦΜ των συνεργατών που μόλις εισήχθησαν! Θα τα χρειαστούμε αργότερα!
     cursor.execute('SELECT "α.φ.μ." FROM "ΣΥΝΕΡΓΑΤΗΣ"')
     all_collaborator_afms = [row[0] for row in cursor.fetchall()]
 
-    # ============================================================================================================================
-    # 2. ΠΕΛΑΤΗΣ (CLIENT)
-    # ============================================================================================================================
+    # ---------- ΠΕΛΑΤΗΣ ---------- # Α.Φ.Μ., Ονομασία, Τοποθεσία
     client_afms = set()
     clients = []
     for _ in range(15):
         while True:
             afm_value = random_afm()
-            ################################### No overlap with collaborator AFMs!
-            if afm_value not in client_afms and afm_value not in collaborator_afms:
+            ################################### Δεν θέλουμε να υπάρχει ίδιο ΑΦΜ με συνεργάτη!
+            if afm_value not in client_afms and afm_value not in all_collaborator_afms:
                 client_afms.add(afm_value)
                 break;
         
@@ -89,37 +88,39 @@ def populate_database(db_path):
 
         clients.append((afm_value, name, random.choice(locations)))
     
-    cursor.executemany('INSERT INTO "ΠΕΛΑΤΗΣ" ("α.φ.μ.", "ονομασία", "τοποθεσία") VALUES (?, ?, ?)', clients)
+    cursor.executemany(
+        'INSERT INTO "ΠΕΛΑΤΗΣ" ("α.φ.μ.", "ονομασία", "τοποθεσία") \
+        VALUES (?, ?, ?)', clients
+        )
 
-    # Grab the AFMs we just inserted! We will use them later!
+    # Βρες όλα τα ΑΦΜ των πελατών που μόλις εισήχθησαν! Θα τα χρειαστούμε!
     cursor.execute('SELECT "α.φ.μ." FROM "ΠΕΛΑΤΗΣ"')
     all_client_afms = [row[0] for row in cursor.fetchall()]
 
-    # ============================================================================================================================
-    # 3. ΤΥΠΟΓΡΑΦΕΙΟ (PRINTING HOUSE)
-    # ============================================================================================================================
-    new_printing_ids = set()
+    # ---------- ΤΥΠΟΓΡΑΦΕΙΟ ---------- # Τοποθεσία, ID, Δυνατότητες
+    printing_ids = set()
     printing_houses = []
     for _ in range(5):
         while True:
             printing_id = random.randint(1, 500)
-            if printing_id not in new_printing_ids:
-                new_printing_ids.add(printing_id)
+            if printing_id not in printing_ids:
+                printing_ids.add(printing_id)
                 break;
         
         capabilities = random.choice(printing_house_capabilities)
 
         printing_houses.append((random.choice(locations), printing_id, capabilities))
     
-    cursor.executemany('INSERT INTO "ΤΥΠΟΓΡΑΦΕΙΟ" ("τοποθεσία", "id", "δυνατότητες") VALUES (?, ?, ?)', printing_houses)
+    cursor.executemany(
+        'INSERT INTO "ΤΥΠΟΓΡΑΦΕΙΟ" ("τοποθεσία", "id", "δυνατότητες") \
+        VALUES (?, ?, ?)', printing_houses
+        )
 
-    # Grab the IDs we just inserted! We will use them later!
+    # Βρες όλα τα IDs των τυπογραφείων που μόλις εισήχθησαν.
     cursor.execute('SELECT "id" FROM "ΤΥΠΟΓΡΑΦΕΙΟ"')
     all_printing_ids = [row[0] for row in cursor.fetchall()]
 
-    # ============================================================================================================================
-    # 4. ΕΙΔΟΣ (CATEGORY)
-    # ============================================================================================================================
+    # ---------- ΕΙΔΟΣ ---------- # Ηλικιακό εύρος, Περιγραφή, ID
     category_ids = set()
     category_data = []
     new_id = 1
@@ -131,15 +132,16 @@ def populate_database(db_path):
 
         category_data.append((category, description, new_id))
     
-    cursor.executemany('INSERT INTO "ΕΙΔΟΣ" ("ηλικιακό εύρος", "περιγραφή", "id") VALUES (?, ?, ?)', category_data)
+    cursor.executemany(
+        'INSERT INTO "ΕΙΔΟΣ" ("ηλικιακό εύρος", "περιγραφή", "id") \
+        VALUES (?, ?, ?)', category_data
+        )
 
-    # Grab the category IDs we just inserted! We will use them later!
+    # Βρες όλα τα IDs των ειδών που μόλις εισήχθησαν.
     cursor.execute('SELECT "id" FROM "ΕΙΔΟΣ"')
     all_category_ids = [row[0] for row in cursor.fetchall()]
 
-    # ============================================================================================================================
-    # 5. ΕΝΤΥΠΟ (BOOK/PRINTED MATERIAL)
-    # ============================================================================================================================
+    # ---------- ΕΝΤΥΠΟ ---------- # Τίτλος, ISBN, Τιμή, Stock, ΕΙΔΟΣ-id
     entypa = []
     used_isbn = set()
     for _ in range(20):
@@ -156,40 +158,20 @@ def populate_database(db_path):
 
         entypa.append((title, isbn, price, stock, cat_id))
 
-    cursor.executemany('INSERT INTO "ΕΝΤΥΠΟ" ("τίτλος", "isbn", "τιμή", "stock", "ΕΙΔΟΣ-id") VALUES (?, ?, ?, ?, ?)', entypa)
+    cursor.executemany(
+        'INSERT INTO "ΕΝΤΥΠΟ" ("τίτλος", "isbn", "τιμή", "stock", "ΕΙΔΟΣ-id") \
+        VALUES (?, ?, ?, ?, ?)', entypa
+        )
 
-    # Grab all ISBNs we just inserted! We will use them later!
+    # Βρες όλα τα ISBNs που μόλις εισήχθησαν.
     cursor.execute('SELECT "isbn" FROM "ΕΝΤΥΠΟ"')
     all_isbn = [row[0] for row in cursor.fetchall()]
 
-    # ============================================================================================================================
-    # Populate “επικοινωνία-*” tables with random phone numbers
-    # ============================================================================================================================
+    # Αντιστοίχισε τα ISBNs με τα αποθέματα των βιβλίων!
+    cursor.execute('SELECT "isbn", "stock" FROM "ΕΝΤΥΠΟ"')
+    all_isbn_stock = {row[0]: row[1] for row in cursor.fetchall()}
 
-    # --- επικοινωνία-ΠΕΛΑΤΗΣ ---
-    client_contacts = []
-    for afm in client_afms:
-        for _ in range(random.randint(1, 3)):
-            client_contacts.append((afm, random_phone()))
-    cursor.executemany('INSERT INTO "επικοινωνία-ΠΕΛΑΤΗΣ" ("ΠΕΛΑΤΗΣ-α.φ.μ.", "ΠΕΛΑΤΗΣ-επικοινωνία") VALUES (?, ?)', client_contacts)
-
-    # --- επικοινωνία-ΣΥΝΕΡΓΑΤΗΣ ---
-    collaborator_contacts = []
-    for afm in collaborator_afms:
-        for _ in range(random.randint(1, 3)):
-            collaborator_contacts.append((afm, random_phone()))
-    cursor.executemany('INSERT INTO "επικοινωνία-ΣΥΝΕΡΓΑΤΗΣ" ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΣΥΝΕΡΓΑΤΗΣ-επικοινωνία") VALUES (?, ?)', collaborator_contacts)
-
-    # --- επικοινωνία-ΤΥΠΟΓΡΑΦΕΙΟ ---
-    printing_contacts = []
-    for pid in new_printing_ids:
-        for _ in range(random.randint(1, 3)):
-            printing_contacts.append((pid, random_phone()))
-    cursor.executemany('INSERT INTO "επικοινωνία-ΤΥΠΟΓΡΑΦΕΙΟ" ("ΤΥΠΟΓΡΑΦΕΙΟ-id", "ΤΥΠΟΓΡΑΦΕΙΟ-επικοινωνία") VALUES (?, ?)', printing_contacts)
-
-    # ============================================================================================================================
-    # 6. ΣΥΜΒΟΛΑΙΟ (CONTRACT) - link collaborator + entypo
-    # ============================================================================================================================
+    # ---------- ΣΥΜΒΟΛΑΙΟ ---------- # Αμοιβή, Ημ. Έναρξης, Διάρκεια, ID, Περιγραφή, ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ., ΕΝΤΥΠΟ-isbn
     contracts = []
     contract_id_used = set()
     for _ in range(40):
@@ -221,13 +203,12 @@ def populate_database(db_path):
     cursor.executemany(
         'INSERT INTO "ΣΥΜΒΟΛΑΙΟ" '
         '("αμοιβή", "ημ. έναρξης", "διάρκεια", "id", "περιγραφή", '
-        '"ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn") VALUES (?, ?, ?, ?, ?, ?, ?)',
+        '"ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn") '
+        'VALUES (?, ?, ?, ?, ?, ?, ?)',
         contracts
     )
 
-    # ============================================================================================================================
-    # 7. ζητάει (CLIENT ASKS FOR/ORDERS A BOOK)
-    # ============================================================================================================================
+    # ---------- ζητάει ---------- # ΠΕΛΑΤΗΣ-α.φ.μ., ΕΝΤΥΠΟ-isbn, ποσότητα, ημ. παραγγελίας, ημ. παράδοσης, χρηματικό ποσό
     used_client_book_pairs = set()
     orders = []
     for _ in range(20):
@@ -242,9 +223,9 @@ def populate_database(db_path):
         order_date = random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
         delivery_date = order_date + timedelta(days = random.randint(1, 30))
 
-        # Get the price of the chosen book from the ΕΝΤΥΠΟ table
+        # Βρες την τιμή του επιλεγμένου βιβλίου από τον πίνακα ΕΝΤΥΠΟ
         cursor.execute('SELECT τιμή FROM "ΕΝΤΥΠΟ" WHERE isbn = ?', (chosen_isbn,))
-        price_of_book = cursor.fetchone()[0]
+        price_of_book = cursor.fetchone()[0] # Προσθέτω το [0] γιατί το fetchone() επιστρέφει tuple
         total_cost = round(price_of_book * quantity, 2)
         
         orders.append((
@@ -264,9 +245,11 @@ def populate_database(db_path):
         orders
     )
 
-    # ============================================================================================================================
-    # 8. επεξεργαζεται (COLLABORATOR WORKING ON A BOOK)
-    # ============================================================================================================================
+    # Αντιστοίχισε τα ISBNs με το πλήθος των βιβλίων που έχουν παραγγελθεί από τους πελάτες!
+    cursor.execute('SELECT "isbn", SUM("ποσότητα") FROM "ζητάει" GROUP BY "ΕΝΤΥΠΟ-isbn"')
+    all_isbn_orders = {row[0]: row[1] for row in cursor.fetchall()}
+
+    # ---------- επεξεργαζεται ---------- # ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ., ΕΝΤΥΠΟ-isbn, ΕΤΑ, ημ. έναρξης, ημ. ολοκλήρωσης, πληρωμή
     used_edit_book_pairs = set()
     processes = []
     for _ in range(40):
@@ -279,8 +262,8 @@ def populate_database(db_path):
         
         start_date = random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
         completion_date = start_date + timedelta(days = random.randint(15, 2 * 365)) # Το άλλαξα σε 2 * 365 το μέγιστο, επειδή τόσο είναι και το contract duration
-        eta_date = completion_date - timedelta(days = random.randint(0, 2 * 365))
-        paid = random.choice([0, 1])  # boolean in SQLite can be stored as 0/1
+        eta_date = completion_date - timedelta(days = random.randint(1, 2 * 365))
+        paid = random.choice([0, 1])  # Το boolean στην SQLite μπορεί να αντιστοιχεί σε 0 ή 1
 
         processes.append((
             coll_afm,
@@ -294,13 +277,12 @@ def populate_database(db_path):
     cursor.executemany(
         'INSERT INTO "επεξεργαζεται" '
         '("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn", "ΕΤΑ", "ημ. έναρξης", '
-        '"ημ. ολοκλήρωσης", "πληρωμή") VALUES (?, ?, ?, ?, ?, ?)',
+        '"ημ. ολοκλήρωσης", "πληρωμή") '
+        'VALUES (?, ?, ?, ?, ?, ?)',
         processes
     )
 
-    # ============================================================================================================================
-    # 9. παραγγέλνει (PRINTING HOUSE ORDERS A BOOK)
-    # ============================================================================================================================
+    # ---------- παραγγέλνει ---------- # ΤΥΠΟΓΡΑΦΕΙΟ-id, ΕΝΤΥΠΟ-isbn, ημ. παραγγελίας, ημ. παράδοσης, ποσότητα, κόστος
     used_ph_isbn_pairs = set()
     printing_orders = []
     for _ in range(20):
@@ -311,15 +293,20 @@ def populate_database(db_path):
                 used_ph_isbn_pairs.add((ph_id, chosen_isbn))
                 break;
 
-        order_date = random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
-        delivery_date = order_date + timedelta(days = random.randint(5, 60))
-        quantity = random.randint(1_000, 10_000)
+        client_order_delivery_date = cursor.execute(
+            'SELECT "ημ. παράδοσης" \
+            FROM "ζητάει" \
+            WHERE "ΕΝΤΥΠΟ-isbn" = ?', (chosen_isbn,)
+            ).fetchone()[0]
+        delivery_date = client_order_delivery_date - timedelta(days = random.randint(1, 60))
+        order_date = delivery_date - timedelta(days = random.randint(1, 30))
+        quantity = all_isbn_stock[chosen_isbn] + all_isbn_orders[chosen_isbn] # Σύνολο αποθέματος + ποσότητα που έχει ζητηθεί!
 
-        # Get the price of the chosen book from the ΕΝΤΥΠΟ table
+        # Βρες την τιμή του επιλεγμένου βιβλίου από τον πίνακα ΕΝΤΥΠΟ
         cursor.execute('SELECT τιμή FROM "ΕΝΤΥΠΟ" WHERE isbn = ?', (chosen_isbn,))
         price_of_book = cursor.fetchone()[0]
         # Όρισε 1 κόστος παραγωγής (ανά τεμάχιο) που να έχει κάποια σχέση με την τιμή πώλησης!
-        # Παράδειγμα: από το 20% έως 80% της τιμής λιανικής
+        # Συγκεκριμένα, από 20% έως 80% της τιμής πώλησης.
         base_cost_per_unit = random.uniform(0.2 * price_of_book, 0.8 * price_of_book)
         total_cost = round(base_cost_per_unit * quantity, 2)
 
@@ -340,12 +327,46 @@ def populate_database(db_path):
         printing_orders
     )
 
-    # ============================================================================================================================
-    # Final Commit
-    # ============================================================================================================================
+    # ======================================================= #
+    # Γέμισε τους “επικοινωνία-*” πίνακες με τυχαία τηλέφωνα! #
+    # ======================================================= #
+
+    # --- επικοινωνία-ΠΕΛΑΤΗΣ ---
+    client_contacts = []
+    for afm in all_client_afms:
+        for _ in range(random.randint(1, 3)):
+            client_contacts.append((afm, random_phone()))
+    cursor.executemany(
+        'INSERT INTO "επικοινωνία-ΠΕΛΑΤΗΣ" ("ΠΕΛΑΤΗΣ-α.φ.μ.", "ΠΕΛΑΤΗΣ-επικοινωνία") \
+        VALUES (?, ?)', client_contacts
+        )
+
+    # --- επικοινωνία-ΣΥΝΕΡΓΑΤΗΣ ---
+    collaborator_contacts = []
+    for afm in all_collaborator_afms:
+        for _ in range(random.randint(1, 3)):
+            collaborator_contacts.append((afm, random_phone()))
+    cursor.executemany(
+        'INSERT INTO "επικοινωνία-ΣΥΝΕΡΓΑΤΗΣ" ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΣΥΝΕΡΓΑΤΗΣ-επικοινωνία") \
+        VALUES (?, ?)', collaborator_contacts
+        )
+
+    # --- επικοινωνία-ΤΥΠΟΓΡΑΦΕΙΟ ---
+    printing_contacts = []
+    for pid in all_printing_ids:
+        for _ in range(random.randint(1, 3)):
+            printing_contacts.append((pid, random_phone()))
+    cursor.executemany(
+        'INSERT INTO "επικοινωνία-ΤΥΠΟΓΡΑΦΕΙΟ" ("ΤΥΠΟΓΡΑΦΕΙΟ-id", "ΤΥΠΟΓΡΑΦΕΙΟ-επικοινωνία") \
+        VALUES (?, ?)', printing_contacts
+        )
+
+    # ============ #
+    # Final Commit #
+    # ============ #
     connection.commit()
     connection.close()
-    print("Database populated with synthetic data successfully.")
+    print("Η ΒΔ γέμισε με δεδομένα επιτυχώς!\n")
 
     return;
 
@@ -353,7 +374,7 @@ def drop_tables(db_path):
     connection = sqlite3.connect(db_path)
     cursor = connection.cursor()
 
-    # Disable foreign key checks while dropping to avoid dependency errors
+    # Απενεργοποίησε τους έλεγχους των ξένων κλειδιών για να αποφύγεις τυχόν λάθη εξάρτησης!
     cursor.execute("PRAGMA foreign_keys = OFF;")
 
     statements = [
@@ -374,13 +395,13 @@ def drop_tables(db_path):
     for sql in statements:
         cursor.execute(sql)
     
-    # Re-enable foreign key checks
+    # Ενεργοποίησε ξανά τους έλεγχους των ξένων κλειδιών!
     cursor.execute("PRAGMA foreign_keys = ON;")
 
     connection.commit()
     connection.close()
 
-    print("All tables dropped successfully!\n")
+    print("Όλα τα δεδομένα της ΒΔ διαγράφηκαν επιτυχώς!\n\nΕκκίνηση γεμίσματος ΒΔ με νέα δεδομένα...\n")
 
     return;
 
@@ -388,7 +409,7 @@ def main():
     db_path = "publishing_house.db"
     schema_file_path = "schema.sql"
 
-    drop_tables(db_path) # Drop old tables
+    drop_tables(db_path)
 
     create_database(db_path, schema_file_path)
     populate_database(db_path)

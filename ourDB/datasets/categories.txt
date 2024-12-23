@@ -1,0 +1,20 @@
+Fiction  
+Non-Fiction  
+Mystery  
+Romance  
+Science Fiction  
+Fantasy  
+Historical Fiction  
+Biography  
+Self-Help  
+Thriller  
+Young Adult  
+Children's Books  
+Poetry  
+Horror  
+Cookbooks  
+Graphic Novels  
+Travel  
+Classics  
+Health & Wellness  
+Philosophy  
