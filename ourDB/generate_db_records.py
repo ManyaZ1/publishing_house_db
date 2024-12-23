@@ -34,6 +34,24 @@ def random_afm():
 def random_phone():
     return random.choice([random.randint(69_000_00000, 699_999_9999), random.randint(2651_000000, 2651_999999)]);
 
+def random_partition(total, parts):
+    """
+    Returns a list of length 'parts' that sums to 'total'.
+    Each element is at least 1 (as long as total >= parts).
+    """
+    result = []
+    sum_so_far = 0
+    for i in range(parts - 1):
+        # max chunk can’t exceed (total - remainder_of_parts),
+        # so we pick a random chunk from 1..(total - leftover parts)
+        chunk = random.randint(1, total - (parts - i - 1))
+        result.append(chunk)
+        sum_so_far += chunk
+    # last chunk is whatever is left
+    result.append(total - sum_so_far)
+    
+    return result;
+
 def populate_database(db_path):
     # Datasets για τη δημιουργία ρεαλιστικών ονομάτων και τίτλων
     first_names = read_data_from_file('first_names.txt')
@@ -287,43 +305,57 @@ def populate_database(db_path):
     )
 
     # ---------- παραγγέλνει ---------- # ΤΥΠΟΓΡΑΦΕΙΟ-id, ΕΝΤΥΠΟ-isbn, ημ. παραγγελίας, ημ. παράδοσης, ποσότητα, κόστος
-    used_ph_isbn_pairs = set()
     printing_orders = []
-    for _ in range(20):
-        while True:
+    used_ph_isbn_pairs = set()
+    # Loop όλα τα ISBNs που έχουν παραγγελθεί από τους πελάτες
+    for chosen_isbn in all_isbn_order:
+        total_needed = all_isbn_stock[chosen_isbn] + all_isbn_quantity_order[chosen_isbn]
+        # Τυχαίος αριθμός μερικών παραγγελιών
+        num_partial_orders = random.randint(1, 3)
+        # Σπάσε το συνολικό πλήθος σε τυχαία μέρη
+        partial_quantities = random_partition(total_needed, num_partial_orders)
+
+        # Βρες την ημερομηνία παράδοσης της παραγγελίας του πελάτη
+        # ώστε να υπολογίσεις τις ημερομηνίες παραγγελίας/παράδοσης
+        # των τυχαίων παραγγελιών για να μην υπερβαίνουν την ημερομηνία παράδοσης
+        client_order_delivery_date_str = cursor.execute(
+            'SELECT "ημ. παράδοσης" '
+            'FROM "ζητάει" '
+            'WHERE "ΕΝΤΥΠΟ-isbn" = ?',
+            (chosen_isbn,)
+        ).fetchone()[0]
+        client_order_delivery_date = datetime.strptime(client_order_delivery_date_str, "%Y-%m-%d")
+
+        # For each partial chunk, create a separate “παραγγέλνει” row
+        for quantity in partial_quantities:
             ph_id = random.choice(all_printing_ids)
-            chosen_isbn = random.choice(all_isbn_order)
-            if (ph_id, chosen_isbn) not in used_ph_isbn_pairs:
-                used_ph_isbn_pairs.add((ph_id, chosen_isbn))
-                break;
 
-        client_order_delivery_date = cursor.execute(
-            'SELECT "ημ. παράδοσης" \
-            FROM "ζητάει" \
-            WHERE "ΕΝΤΥΠΟ-isbn" = ?', (chosen_isbn,)
-            ).fetchone()[0]
-        client_order_delivery_date = datetime.strptime(client_order_delivery_date, "%Y-%m-%d")
-        delivery_date = client_order_delivery_date - timedelta(days = random.randint(1, 60))
-        order_date = delivery_date - timedelta(days = random.randint(1, 30))
-        quantity = all_isbn_stock[chosen_isbn] + all_isbn_quantity_order[chosen_isbn] # Σύνολο αποθέματος + ποσότητα που έχει ζητηθεί!
+            # Τα (ph_id, chosen_isbn) ζεύγοι πρέπει να είναι μοναδικά:
+            if (ph_id, chosen_isbn) in used_ph_isbn_pairs:
+                continue;
+            used_ph_isbn_pairs.add((ph_id, chosen_isbn))
 
-        # Βρες την τιμή του επιλεγμένου βιβλίου από τον πίνακα ΕΝΤΥΠΟ
-        cursor.execute('SELECT τιμή FROM "ΕΝΤΥΠΟ" WHERE isbn = ?', (chosen_isbn,))
-        price_of_book = cursor.fetchone()[0]
-        # Όρισε 1 κόστος παραγωγής (ανά τεμάχιο) που να έχει κάποια σχέση με την τιμή πώλησης!
-        # Συγκεκριμένα, από 20% έως 80% της τιμής πώλησης.
-        base_cost_per_unit = random.uniform(0.2 * price_of_book, 0.8 * price_of_book)
-        total_cost = round(base_cost_per_unit * quantity, 2)
+            # Generate random order/delivery dates before client_order_delivery_date
+            delivery_date = client_order_delivery_date - timedelta(
+                days=random.randint(1, 60)
+            )
+            order_date = delivery_date - timedelta(days=random.randint(1, 30))
 
-        printing_orders.append((
-            ph_id,
-            chosen_isbn,
-            order_date.strftime("%Y-%m-%d"),
-            delivery_date.strftime("%Y-%m-%d"),
-            quantity,
-            total_cost
-        ))
-    
+            # Calculate cost based on random production cost per unit
+            cursor.execute('SELECT τιμή FROM "ΕΝΤΥΠΟ" WHERE isbn = ?', (chosen_isbn,))
+            price_of_book = cursor.fetchone()[0]
+            base_cost_per_unit = random.uniform(0.2 * price_of_book, 0.8 * price_of_book)
+            total_cost = round(base_cost_per_unit * quantity, 2)
+
+            printing_orders.append((
+                ph_id,
+                chosen_isbn,
+                order_date.strftime("%Y-%m-%d"),
+                delivery_date.strftime("%Y-%m-%d"),
+                quantity,
+                total_cost
+            ))
+
     cursor.executemany(
         'INSERT INTO "παραγγέλνει" '
         '("ΤΥΠΟΓΡΑΦΕΙΟ-id", "ΕΝΤΥΠΟ-isbn", "ημ. παραγγελίας", '
