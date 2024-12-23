@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS "ζητάει" (
 	"ΕΝΤΥΠΟ-isbn" integer,
 	"ποσότητα" integer,
 	"ημ. παραγγελίας" date,
-	"ημ. παράδοσης " date,
+	"ημ. παράδοσης" date,
 	"χρηματικό ποσό" float,
 	PRIMARY KEY ("ΠΕΛΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn"),
 	FOREIGN KEY ("ΠΕΛΑΤΗΣ-α.φ.μ.") REFERENCES "ΠΕΛΑΤΗΣ" ("α.φ.μ.")

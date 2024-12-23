@@ -18,7 +18,7 @@ def create_database(db_path, schema_file_path):
     cursor.executescript(schema_content)
     connection.commit()
     connection.close()
-    print("Η ΒΔ/πίνακες δημιουργήθηκαν επιτυχώς!\n")
+    print("Η ΒΔ/πίνακες δημιουργήθηκαν επιτυχώς!")
 
     return;
 
@@ -240,14 +240,18 @@ def populate_database(db_path):
     cursor.executemany(
         'INSERT INTO "ζητάει" '
         '("ΠΕΛΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn", "ποσότητα", '
-        '"ημ. παραγγελίας", "ημ. παράδοσης ", "χρηματικό ποσό") '
+        '"ημ. παραγγελίας", "ημ. παράδοσης", "χρηματικό ποσό") '
         'VALUES (?, ?, ?, ?, ?, ?)',
         orders
     )
 
+    # Βρες όλα τα ISBNs που έχουν παραγγελθεί από τους πελάτες.
+    cursor.execute('SELECT "ΕΝΤΥΠΟ-isbn" FROM "ζητάει"')
+    all_isbn_order = [row[0] for row in cursor.fetchall()]
+
     # Αντιστοίχισε τα ISBNs με το πλήθος των βιβλίων που έχουν παραγγελθεί από τους πελάτες!
-    cursor.execute('SELECT "isbn", SUM("ποσότητα") FROM "ζητάει" GROUP BY "ΕΝΤΥΠΟ-isbn"')
-    all_isbn_orders = {row[0]: row[1] for row in cursor.fetchall()}
+    cursor.execute('SELECT "ΕΝΤΥΠΟ-isbn", SUM("ποσότητα") FROM "ζητάει" GROUP BY "ΕΝΤΥΠΟ-isbn"')
+    all_isbn_quantity_order = {row[0]: row[1] for row in cursor.fetchall()}
 
     # ---------- επεξεργαζεται ---------- # ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ., ΕΝΤΥΠΟ-isbn, ΕΤΑ, ημ. έναρξης, ημ. ολοκλήρωσης, πληρωμή
     used_edit_book_pairs = set()
@@ -288,7 +292,7 @@ def populate_database(db_path):
     for _ in range(20):
         while True:
             ph_id = random.choice(all_printing_ids)
-            chosen_isbn = random.choice(all_isbn)
+            chosen_isbn = random.choice(all_isbn_order)
             if (ph_id, chosen_isbn) not in used_ph_isbn_pairs:
                 used_ph_isbn_pairs.add((ph_id, chosen_isbn))
                 break;
@@ -298,9 +302,10 @@ def populate_database(db_path):
             FROM "ζητάει" \
             WHERE "ΕΝΤΥΠΟ-isbn" = ?', (chosen_isbn,)
             ).fetchone()[0]
+        client_order_delivery_date = datetime.strptime(client_order_delivery_date, "%Y-%m-%d")
         delivery_date = client_order_delivery_date - timedelta(days = random.randint(1, 60))
         order_date = delivery_date - timedelta(days = random.randint(1, 30))
-        quantity = all_isbn_stock[chosen_isbn] + all_isbn_orders[chosen_isbn] # Σύνολο αποθέματος + ποσότητα που έχει ζητηθεί!
+        quantity = all_isbn_stock[chosen_isbn] + all_isbn_quantity_order[chosen_isbn] # Σύνολο αποθέματος + ποσότητα που έχει ζητηθεί!
 
         # Βρες την τιμή του επιλεγμένου βιβλίου από τον πίνακα ΕΝΤΥΠΟ
         cursor.execute('SELECT τιμή FROM "ΕΝΤΥΠΟ" WHERE isbn = ?', (chosen_isbn,))
@@ -366,7 +371,7 @@ def populate_database(db_path):
     # ============ #
     connection.commit()
     connection.close()
-    print("Η ΒΔ γέμισε με δεδομένα επιτυχώς!\n")
+    print("Η ΒΔ γέμισε με δεδομένα επιτυχώς!")
 
     return;
 
@@ -401,7 +406,7 @@ def drop_tables(db_path):
     connection.commit()
     connection.close()
 
-    print("Όλα τα δεδομένα της ΒΔ διαγράφηκαν επιτυχώς!\n\nΕκκίνηση γεμίσματος ΒΔ με νέα δεδομένα...\n")
+    print("Όλα τα δεδομένα της ΒΔ διαγράφηκαν επιτυχώς!\n\nΕκκίνηση γεμίσματος ΒΔ με νέα δεδομένα...")
 
     return;
 
