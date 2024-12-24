@@ -22,7 +22,7 @@ def create_database(db_path, schema_file_path):
     cursor.executescript(schema_content)
     connection.commit()
     connection.close()
-    print("succesful database creation!")
+    print("Succesful database creation!")
 
     return;
 
@@ -419,7 +419,7 @@ def populate_database(db_path):
     # ============ #
     connection.commit()
     connection.close()
-    print("Η ΒΔ γέμισε με δεδομένα επιτυχώς!")
+    print("Database data genetation was succesful.")
 
     return;
 
@@ -453,9 +453,8 @@ def drop_tables(db_path):
 
     connection.commit()
     connection.close()
-
-    print("Όλα τα δεδομένα της ΒΔ διαγράφηκαν επιτυχώς!\n\nΕκκίνηση γεμίσματος ΒΔ με νέα δεδομένα...")
-
+    print("All the database tables were deleted succsfully")
+    print("\nNew data generation starting ...")
     return;
 
 def main():
