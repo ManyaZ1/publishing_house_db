@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS "PARTNER" (
 	"name" string,
 	"Tax_Id" integer,
-	"specialisation" integer,
+	"specialisation" integer ,
 	"comments" string,
+	CONSTRAINT "check_specialisation" CHECK ("specialisation" BETWEEN 1 AND 4),
 	PRIMARY KEY ("Tax_Id")
 );
 
