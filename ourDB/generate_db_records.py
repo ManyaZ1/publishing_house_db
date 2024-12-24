@@ -151,7 +151,9 @@ def drop_tables(db_path):
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    db_path = script_dir + "/publishing_house.db"
+    cwd = os.getcwd()
+    print(f"Current working directory: {cwd}")
+    db_path = cwd + "/publishing_house.db"
     schema_file_path = script_dir + "/schema.sql"
 
     drop_tables(db_path)

@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-
+import sqlite3
 class TableTab(ttk.Frame):
     """
     Each tab handles CRUD for a single table.
