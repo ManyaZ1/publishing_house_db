@@ -34,8 +34,6 @@ def random_afm():
 def random_phone():
     return random.choice([random.randint(69_000_00000, 699_999_9999), random.randint(2651_000000, 2651_999999)]);
 
-import random
-
 def random_partition(total, parts):
     result = []
     allocated = 0  # Πόσα έχουμε ήδη μοιράσει σε τυπογραφεία
