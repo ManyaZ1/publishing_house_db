@@ -196,8 +196,8 @@ def populate_database(db_path):
         
         contracts.append((
             fee,
-            start_date.strftime("%d-%m-%Y"),
-            duration_date.strftime("%d-%m-%Y"),
+            start_date.strftime("%Y-%m-%d"),
+            duration_date.strftime("%Y-%m-%d"),
             contract_id,
             description,
             coll_afm,
@@ -236,8 +236,8 @@ def populate_database(db_path):
             c_afm,
             chosen_isbn,
             quantity,
-            order_date.strftime("%d-%m-%Y"),
-            delivery_date.strftime("%d-%m-%Y"),
+            order_date.strftime("%Y-%m-%d"),
+            delivery_date.strftime("%Y-%m-%d"),
             total_cost
         ))
 
@@ -279,9 +279,9 @@ def populate_database(db_path):
         processes.append((
             coll_afm,
             chosen_isbn,
-            eta_date.strftime("%d-%m-%Y"),
-            start_date.strftime("%d-%m-%Y"),
-            completion_date.strftime("%d-%m-%Y"),
+            eta_date.strftime("%Y-%m-%d"),
+            start_date.strftime("%Y-%m-%d"),
+            completion_date.strftime("%Y-%m-%d"),
             paid
         ))
     
@@ -313,7 +313,7 @@ def populate_database(db_path):
                 'FROM "ζητάει" '
                 'WHERE "ΕΝΤΥΠΟ-isbn" = ?', (chosen_isbn,)
                 ).fetchone()[0]
-            client_order_delivery_date = datetime.strptime(client_order_delivery_date_str, "%d-%m-%Y")
+            client_order_delivery_date = datetime.strptime(client_order_delivery_date_str, "%Y-%m-%d")
 
             # Για κάθε μερικό κομμάτι, δημιούργησε μια ξεχωριστή πλειάδα "παραγγέλνει"
             for quantity in partial_quantities:
@@ -335,8 +335,8 @@ def populate_database(db_path):
                 printing_orders.append((
                     ph_id,
                     chosen_isbn,
-                    order_date.strftime("%d-%m-%Y"),
-                    delivery_date.strftime("%d-%m-%Y"),
+                    order_date.strftime("%Y-%m-%d"),
+                    delivery_date.strftime("%Y-%m-%d"),
                     quantity,
                     total_cost
                 ))
@@ -362,8 +362,8 @@ def populate_database(db_path):
             printing_orders.append((
                     ph_id,
                     chosen_isbn,
-                    order_date.strftime("%d-%m-%Y"),
-                    delivery_date.strftime("%d-%m-%Y"),
+                    order_date.strftime("%Y-%m-%d"),
+                    delivery_date.strftime("%Y-%m-%d"),
                     quantity,
                     total_cost
                 ))
