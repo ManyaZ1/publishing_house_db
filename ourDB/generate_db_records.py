@@ -3,6 +3,170 @@ import random
 from datetime import datetime, timedelta
 from time import sleep
 import os
+import sqlite3
+import random
+from datetime import datetime, timedelta
+from time import sleep
+import os
+
+# Read data from a text file and return it as a list (used for datasets)
+def read_data_from_file(file_path):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = f"datasets/{file_path}"
+    file_path = script_dir + "/" + file_path
+
+    with open(file_path, 'r', encoding='utf-8') as file:
+        return [line.strip() for line in file.readlines()]
+
+def create_database(db_path, schema_file_path):
+    with open(schema_file_path, 'r', encoding='utf-8') as schema_file:
+        schema_content = schema_file.read()
+
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+    cursor.executescript(schema_content)
+    connection.commit()
+    connection.close()
+    print("Successful database creation!")
+
+    return
+
+def random_date(start, end):
+    delta = end - start
+    random_days = random.randint(0, delta.days)
+    return start + timedelta(days=random_days)
+
+def random_afm():
+    return random.randint(100_000_000, 999_999_999)
+
+def random_phone():
+    return random.choice([random.randint(69_000_00000, 699_999_9999), random.randint(2651_000000, 2651_999999)])
+
+def populate_database(db_path):
+    # Datasets for generating realistic names and titles
+    first_names = read_data_from_file('first_names.txt')
+    last_names = read_data_from_file('last_names.txt')
+    locations = read_data_from_file('locations.txt')
+    book_titles = read_data_from_file('book_titles.txt')
+    bookstores_names = read_data_from_file('bookstores_names.txt')
+
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    # ---------- PARTNER ----------
+    collaborator_afms = set()
+    collaborators = []
+    for _ in range(10):
+        while True:
+            afm_value = random_afm()
+            if afm_value not in collaborator_afms:
+                collaborator_afms.add(afm_value)
+                break
+
+        name = f"{random.choice(first_names)} {random.choice(last_names)}"
+        specialisation = random.randint(1, 4)
+        comments = f"Comments for partner with Tax ID {afm_value}"
+
+        collaborators.append((name, afm_value, specialisation, comments))
+
+    cursor.executemany(
+        'INSERT INTO "PARTNER" ("name", "Tax_Id", "specialisation", "comments") VALUES (?, ?, ?, ?)',
+        collaborators
+    )
+
+    # ---------- CLIENT ----------
+    client_afms = set()
+    clients = []
+    for _ in range(15):
+        while True:
+            afm_value = random_afm()
+            if afm_value not in client_afms and afm_value not in collaborator_afms:
+                client_afms.add(afm_value)
+                break
+
+        name = random.choice(bookstores_names)
+        location = random.choice(locations)
+
+        clients.append((afm_value, name, location))
+
+    cursor.executemany(
+        'INSERT INTO "CLIENT" ("Tax_ID", "name", "location") VALUES (?, ?, ?)',
+        clients
+    )
+
+    # ---------- PRINTING_HOUSE ----------
+    printing_houses = []
+    printing_id = 1
+    for _ in range(5):
+        location = random.choice(locations)
+        capabilities = random.randint(1, 5)
+        printing_houses.append((location, printing_id, capabilities))
+        printing_id += 1
+
+    cursor.executemany(
+        'INSERT INTO "PRINTING_HOUSE" ("p_location", "p_id", "capabilities") VALUES (?, ?, ?)',
+        printing_houses
+    )
+
+    # ---------- GENERATING OTHER DATA ----------
+    # Add your data generation for other tables here...
+
+    # Final Commit
+    connection.commit()
+    connection.close()
+    print("Database population was successful.")
+
+    return
+
+def drop_tables(db_path):
+    connection = sqlite3.connect(db_path)
+    cursor = connection.cursor()
+
+    cursor.execute("PRAGMA foreign_keys = OFF;")
+
+    statements = [
+        'DROP TABLE IF EXISTS "communication-CLIENT";',
+        'DROP TABLE IF EXISTS "communication-PARTNER";',
+        'DROP TABLE IF EXISTS "communication-PRINTING";',
+        'DROP TABLE IF EXISTS "order_printing_house";',
+        'DROP TABLE IF EXISTS "contributes";',
+        'DROP TABLE IF EXISTS "client_orders";',
+        'DROP TABLE IF EXISTS "CONTRACT";',
+        'DROP TABLE IF EXISTS "PUBLICATION";',
+        'DROP TABLE IF EXISTS "GENRE";',
+        'DROP TABLE IF EXISTS "PRINTING_HOUSE";',
+        'DROP TABLE IF EXISTS "CLIENT";',
+        'DROP TABLE IF EXISTS "PARTNER";'
+    ]
+
+    for sql in statements:
+        cursor.execute(sql)
+
+    cursor.execute("PRAGMA foreign_keys = ON;")
+    connection.commit()
+    connection.close()
+    print("All tables dropped successfully!")
+
+    return
+
+def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = script_dir + "/publishing_house.db"
+    schema_file_path = script_dir + "/schema.sql"
+
+    drop_tables(db_path)
+    create_database(db_path, schema_file_path)
+    populate_database(db_path)
+
+    sleep(2)
+    return
+
+if __name__ == "__main__":
+    main()
+
+
+
+'''
 # Διαβάζει τα δεδομένα από 1 αρχείο κειμένου και τα επιστρέφει ως λίστα (χρησιμοποιείτε για τα datasets)
 def read_data_from_file(file_path):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -92,12 +256,12 @@ def populate_database(db_path):
         collaborators.append((name, afm_value, random.choice(collaborator_categories), comments))
     
     cursor.executemany(
-        'INSERT INTO "ΣΥΝΕΡΓΑΤΗΣ" ("ονομασία", "α.φ.μ.", "ειδίκευση", "σχόλια") \
+        'INSERT INTO "PARTNER" ("ονομασία", "α.φ.μ.", "ειδίκευση", "σχόλια") \
         VALUES (?, ?, ?, ?)', collaborators
         ) # Στο VALUES (?, ?, ?, ?), τα ? είναι placeholders για τα πραγματικά δεδομένα που θα εισαχθοϋν!
 
     # Βρες όλα τα ΑΦΜ των συνεργατών που μόλις εισήχθησαν! Θα τα χρειαστούμε αργότερα!
-    all_collaborator_afms = get_everything(cursor, 'SELECT "α.φ.μ." FROM "ΣΥΝΕΡΓΑΤΗΣ"')
+    all_collaborator_afms = get_everything(cursor, 'SELECT "α.φ.μ." FROM "PARTNER"')
 
     # ---------- ΠΕΛΑΤΗΣ ---------- # Α.Φ.Μ., Ονομασία, Τοποθεσία
     client_afms = set()
@@ -213,7 +377,7 @@ def populate_database(db_path):
     cursor.executemany(
         'INSERT INTO "ΣΥΜΒΟΛΑΙΟ" '
         '("αμοιβή", "ημ. έναρξης", "διάρκεια", "id", "περιγραφή", '
-        '"ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn") '
+        '"PARTNER-α.φ.μ.", "ΕΝΤΥΠΟ-isbn") '
         'VALUES (?, ?, ?, ?, ?, ?, ?)',
         contracts
     )
@@ -291,7 +455,7 @@ def populate_database(db_path):
     
     cursor.executemany(
         'INSERT INTO "επεξεργαζεται" '
-        '("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn", "ΕΤΑ", "ημ. έναρξης", '
+        '("PARTNER-Tax_Id", "ΕΝΤΥΠΟ-isbn", "ΕΤΑ", "ημ. έναρξης", '
         '"ημ. ολοκλήρωσης", "πληρωμή") '
         'VALUES (?, ?, ?, ?, ?, ?)',
         processes
@@ -480,3 +644,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''
