@@ -378,7 +378,7 @@ def populate_database(db_path):
             # so that printing finishes before that date
             # (the logic can vary, here is an example picking the earliest or latest date, etc.)
             client_deliv_str = cursor.execute(
-                'SELECT "delivery date" FROM "client_orders" WHERE "Publication-isbn" = ? LIMIT 1',
+                'SELECT min("delivery date") FROM "client_orders" WHERE "Publication-isbn" = ? ',
                 (chosen_isbn,)
             ).fetchone()[0]
             client_deliv_date = datetime.strptime(client_deliv_str, "%Y-%m-%d")
