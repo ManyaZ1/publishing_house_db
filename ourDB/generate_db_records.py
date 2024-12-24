@@ -459,11 +459,11 @@ def drop_tables(db_path):
     return;
 
 def main():
-    print("ajaja")
+    #print("ajaja")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     cwd = os.getcwd()
 
-    print("Script Directory (calculated from __file__):", script_dir)
+    #print("Script Directory (calculated from __file__):", script_dir)
     #print("Current Working Directory:", cwd)
     #print(script_dir)
     db_path = "publishing_house.db"
