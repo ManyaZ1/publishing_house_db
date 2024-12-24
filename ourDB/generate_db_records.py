@@ -252,7 +252,7 @@ def populate_database(db_path):
     # Βρες όλα τα ISBNs που έχουν παραγγελθεί από τους πελάτες.
     all_isbn_order = get_everything(cursor, 'SELECT "ΕΝΤΥΠΟ-isbn" FROM "ζητάει"')
 
-    # Αντιστοίχισε τα ISBNs με το πλήθος των βιβλίων που έχουν παραγγελθεί από τους πελάτες!
+    # Αντιστοίχισε το πλήθος των βιβλίων(ISBN) που έχουν παραγγελθεί από τους πελάτες!
     cursor.execute(
         'SELECT "ΕΝΤΥΠΟ-isbn", SUM("ποσότητα") \
         FROM "ζητάει" \
