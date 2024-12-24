@@ -465,7 +465,7 @@ def main():
     #print("Script Directory (calculated from __file__):", script_dir)
     #print("Current Working Directory:", cwd)
     #print(script_dir)
-    db_path = "publishing_house.db"
+    db_path = script_dir+"/publishing_house.db"
     
     schema_file_path = script_dir + "/schema.sql"
 

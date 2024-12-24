@@ -103,7 +103,9 @@ class PublishingHouseApp(tk.Tk):
         return;
 
 def main():
-    app = PublishingHouseApp(db_path="../ourDB/publishing_house.db")
+    cwd = os.getcwd()
+    print(f"Current working directory: {cwd}")
+    app = PublishingHouseApp(db_path= cwd +"/ourDB/publishing_house.db" )#"../ourDB/publishing_house.db"
     app.mainloop()
 
     return;
