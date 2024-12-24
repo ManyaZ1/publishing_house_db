@@ -1,132 +1,132 @@
-CREATE TABLE IF NOT EXISTS "ΣΥΝΕΡΓΑΤΗΣ" (
-	"ονομασία" string,
-	"α.φ.μ." integer,
-	"ειδίκευση" string,
-	"σχόλια" string,
-	PRIMARY KEY ("α.φ.μ.")
+CREATE TABLE IF NOT EXISTS "PARTNER" (
+	"name" string,
+	"Tax_Id" integer,
+	"specialisation" integer,
+	"comments" string,
+	PRIMARY KEY ("Tax_Id")
 );
 
-CREATE TABLE IF NOT EXISTS "ΣΥΜΒΟΛΑΙΟ" (
-	"αμοιβή" float,
-	"ημ. έναρξης" date,
-	"διάρκεια" date,
+CREATE TABLE IF NOT EXISTS "CONTRACT" (
+	"payment" float,
+	"start_date" date,
+	"expiration_date" date,
 	"id" integer,
-	"περιγραφή" string,
-	"ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ." integer,
-	"ΕΝΤΥΠΟ-isbn" integer,
-	PRIMARY KEY ("id", "ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn"),
-	FOREIGN KEY ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.") REFERENCES "ΣΥΝΕΡΓΑΤΗΣ" ("α.φ.μ.")
+	"description" string,
+	"Partner_Tax_Id" integer,
+	"Publication-isbn" integer,
+	PRIMARY KEY ("id", "Partner_Tax_Id", "Publication-isbn"),
+	FOREIGN KEY ("Partner_Tax_Id") REFERENCES "PARTNER" ("Tax_Id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("ΕΝΤΥΠΟ-isbn") REFERENCES "ΕΝΤΥΠΟ" ("isbn")
+	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "ΠΕΛΑΤΗΣ" (
-	"α.φ.μ." integer,
-	"ονομασία" string,
-	"τοποθεσία" string,
-	PRIMARY KEY ("α.φ.μ.")
+CREATE TABLE IF NOT EXISTS "CLIENT" (
+	"Tax_ID" integer,
+	"name" string,
+	"location" string,
+	PRIMARY KEY ("Tax_ID")
 );
 
-CREATE TABLE IF NOT EXISTS "ΤΥΠΟΓΡΑΦΕΙΟ" (
-	"τοποθεσία" string,
+CREATE TABLE IF NOT EXISTS "PRINTING_HOUSE" (
+	"p_location" string,
+	"p_id" integer,
+	"capabilities" integer,
+	PRIMARY KEY ("p_id")
+);
+
+CREATE TABLE IF NOT EXISTS "GENRE" (
+	"age_range" string,
+	"description" string,
 	"id" integer,
-	"δυνατότητες" string,
 	PRIMARY KEY ("id")
 );
 
-CREATE TABLE IF NOT EXISTS "ΕΙΔΟΣ" (
-	"ηλικιακό εύρος" string,
-	"περιγραφή" string,
-	"id" integer,
-	PRIMARY KEY ("id")
-);
-
-CREATE TABLE IF NOT EXISTS "ΕΝΤΥΠΟ" (
-	"τίτλος" string,
+CREATE TABLE IF NOT EXISTS "PUBLICATION" (
+	"title" string,
 	"isbn" integer,
-	"τιμή" float,
+	"price" float,
 	"stock" integer,
-	"ΕΙΔΟΣ-id" integer,
-	PRIMARY KEY ("isbn", "ΕΙΔΟΣ-id"),
-	FOREIGN KEY ("ΕΙΔΟΣ-id") REFERENCES "ΕΙΔΟΣ" ("id")
+	"genre-id" integer,
+	PRIMARY KEY ("isbn", "genre-id"),
+	FOREIGN KEY ("genre-id") REFERENCES "GENRE" ("id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "ζητάει" (
-	"ΠΕΛΑΤΗΣ-α.φ.μ." integer,
-	"ΕΝΤΥΠΟ-isbn" integer,
-	"ποσότητα" integer,
-	"ημ. παραγγελίας" date,
-	"ημ. παράδοσης" date,
-	"χρηματικό ποσό" float,
-	PRIMARY KEY ("ΠΕΛΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn"),
-	FOREIGN KEY ("ΠΕΛΑΤΗΣ-α.φ.μ.") REFERENCES "ΠΕΛΑΤΗΣ" ("α.φ.μ.")
+CREATE TABLE IF NOT EXISTS "client_orders" (
+	"Client_Tax_ID" integer,
+	"Publication-isbn" integer,
+	"quantity" integer,
+	"order date" date,
+	"delivery date" date,
+	"payment" float,
+	PRIMARY KEY ("Client_Tax_ID", "Publication-isbn"),
+	FOREIGN KEY ("Client_Tax_ID") REFERENCES "CLIENT" ("Tax_ID")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("ΕΝΤΥΠΟ-isbn") REFERENCES "ΕΝΤΥΠΟ" ("isbn")
+	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "επεξεργαζεται" (
-	"ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ." integer,
-	"ΕΝΤΥΠΟ-isbn" integer,
-	"ΕΤΑ" date,
-	"ημ. έναρξης" date,
-	"ημ. ολοκλήρωσης" date,
-	"πληρωμή" boolean,
-	PRIMARY KEY ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΕΝΤΥΠΟ-isbn"),
-	FOREIGN KEY ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.") REFERENCES "ΣΥΝΕΡΓΑΤΗΣ" ("α.φ.μ.")
+CREATE TABLE IF NOT EXISTS "contributes" (
+	"Partner_TaxId" integer,
+	"Publication-isbn" integer,
+	"estimated_completion_date" date,
+	"start_date" date,
+	"completion_date" date,
+	"payment" boolean,
+	PRIMARY KEY ("Partner_TaxId", "Publication-isbn"),
+	FOREIGN KEY ("Partner_TaxId") REFERENCES "PARTNER" ("Tax_Id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("ΕΝΤΥΠΟ-isbn") REFERENCES "ΕΝΤΥΠΟ" ("isbn")
+	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "παραγγέλνει" (
-	"ΤΥΠΟΓΡΑΦΕΙΟ-id" integer,
-	"ΕΝΤΥΠΟ-isbn" integer,
-	"ημ. παραγγελίας" date,
-	"ημ. παράδοσης" date,
-	"ποσότητα" integer,
-	"κόστος" float,
-	PRIMARY KEY ("ΤΥΠΟΓΡΑΦΕΙΟ-id", "ΕΝΤΥΠΟ-isbn"),
-	FOREIGN KEY ("ΤΥΠΟΓΡΑΦΕΙΟ-id") REFERENCES "ΤΥΠΟΓΡΑΦΕΙΟ" ("id")
+CREATE TABLE IF NOT EXISTS "order_printing_house" (
+	"Printing-id" integer,
+	"Publication-isbn" integer,
+	"order date" date,
+	"delivery date" date,
+	"quntity" integer,
+	"cost" float,
+	PRIMARY KEY ("Printing-id", "Publication-isbn"),
+	FOREIGN KEY ("Printing-id") REFERENCES "PRINTING_HOUSE" ("p_id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
-	FOREIGN KEY ("ΕΝΤΥΠΟ-isbn") REFERENCES "ΕΝΤΥΠΟ" ("isbn")
+	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
 CREATE TABLE IF NOT EXISTS "επικοινωνία-ΠΕΛΑΤΗΣ" (
-	"ΠΕΛΑΤΗΣ-α.φ.μ." integer,
-	"ΠΕΛΑΤΗΣ-επικοινωνία" integer,
-	PRIMARY KEY ("ΠΕΛΑΤΗΣ-α.φ.μ.", "ΠΕΛΑΤΗΣ-επικοινωνία"),
-	FOREIGN KEY ("ΠΕΛΑΤΗΣ-α.φ.μ.") REFERENCES "ΠΕΛΑΤΗΣ" ("α.φ.μ.")
+	"Clinet_Tax_ID" integer,
+	"Client_Comm" integer,
+	PRIMARY KEY ("Clinet_Tax_ID", "Client_Comm"),
+	FOREIGN KEY ("Clinet_Tax_ID") REFERENCES "CLIENT" ("Tax_ID")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "επικοινωνία-ΣΥΝΕΡΓΑΤΗΣ" (
-	"ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ." integer,
-	"ΣΥΝΕΡΓΑΤΗΣ-επικοινωνία" integer,
-	PRIMARY KEY ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.", "ΣΥΝΕΡΓΑΤΗΣ-επικοινωνία"),
-	FOREIGN KEY ("ΣΥΝΕΡΓΑΤΗΣ-α.φ.μ.") REFERENCES "ΣΥΝΕΡΓΑΤΗΣ" ("α.φ.μ.")
+CREATE TABLE IF NOT EXISTS "communication-PARTNER" (
+	"Partner_Tax_Id" integer,
+	"partner_comm" integer,
+	PRIMARY KEY ("Partner_Tax_Id", "partner_comm"),
+	FOREIGN KEY ("Partner_Tax_Id") REFERENCES "PARTNER" ("Tax_Id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "επικοινωνία-ΤΥΠΟΓΡΑΦΕΙΟ" (
-	"ΤΥΠΟΓΡΑΦΕΙΟ-id" integer,
-	"ΤΥΠΟΓΡΑΦΕΙΟ-επικοινωνία" integer,
-	PRIMARY KEY ("ΤΥΠΟΓΡΑΦΕΙΟ-id", "ΤΥΠΟΓΡΑΦΕΙΟ-επικοινωνία"),
-	FOREIGN KEY ("ΤΥΠΟΓΡΑΦΕΙΟ-id") REFERENCES "ΤΥΠΟΓΡΑΦΕΙΟ" ("id")
+CREATE TABLE IF NOT EXISTS "communication-PRINTING" (
+	"Printing-id" integer,
+	"Printing_comm" integer,
+	PRIMARY KEY ("Printing-id", "Printing_comm"),
+	FOREIGN KEY ("Printing-id") REFERENCES "PRINTING_HOUSE" ("p_id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
 );
