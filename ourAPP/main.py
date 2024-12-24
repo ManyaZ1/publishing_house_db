@@ -20,7 +20,17 @@ from ourModules.search_window import SearchWindow
 from ourModules.stats_window import StatsWindow
 
 class PublishingHouseApp(tk.Tk):
-    def __init__(self, db_path="publishing_house.db"):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    #print(f"Script directory: {script_dir}")
+
+# Remove the last folder 'ourDB'
+    new_path = os.path.dirname(script_dir)
+
+    #print("New path:", new_path)
+    #cwd = os.getcwd()
+    #print(f"Current working directory: {cwd}")
+    db_path = new_path + "/publishing_house.db"
+    def __init__(self, db_path):
         super().__init__()
         
         self.title("Publishing House DB - GUI")
@@ -224,5 +234,4 @@ def main():
     return;
 
 if __name__ == "__main__":
-    main()
-'''
+    main()'''

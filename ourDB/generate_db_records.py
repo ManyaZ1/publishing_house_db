@@ -483,10 +483,15 @@ def populate_database(db_path):
 
 def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    #script_dir = os.path.dirname(os.path.abspath(__file__))
-    cwd = os.getcwd()
-#     print(f"Current working directory: {cwd}")
-    db_path = cwd + "/publishing_house.db"
+    #print(f"Script directory: {script_dir}")
+
+# Remove the last folder 'ourDB'
+    new_path = os.path.dirname(script_dir)
+
+    #print("New path:", new_path)
+    #cwd = os.getcwd()
+    #print(f"Current working directory: {cwd}")
+    db_path = new_path + "/publishing_house.db"
     schema_file_path = script_dir + "/schema.sql"
     #db_path = "publishing_house.db"
     #schema_file_path = "schema.sql"
