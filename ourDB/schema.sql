@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS "order_printing_house" (
             ON DELETE RESTRICT
 );
 
-CREATE TABLE IF NOT EXISTS "επικοινωνία-ΠΕΛΑΤΗΣ" (
+CREATE TABLE IF NOT EXISTS "communication-CLIENT" (
 	"Clinet_Tax_ID" integer,
 	"Client_Comm" integer,
 	PRIMARY KEY ("Clinet_Tax_ID", "Client_Comm"),
