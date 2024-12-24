@@ -2,10 +2,14 @@ import sqlite3
 import random
 from datetime import datetime, timedelta
 from time import sleep
-
+import os
 # Διαβάζει τα δεδομένα από 1 αρχείο κειμένου και τα επιστρέφει ως λίστα (χρησιμοποιείτε για τα datasets)
 def read_data_from_file(file_path):
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    #print("1Script Directory (calculated from __file__):", script_dir)
     file_path = f"datasets/{file_path}"
+    file_path= script_dir + "/" + file_path
+    
     with open(file_path, 'r', encoding='utf-8') as file:
         return [line.strip() for line in file.readlines()];
 
@@ -18,7 +22,7 @@ def create_database(db_path, schema_file_path):
     cursor.executescript(schema_content)
     connection.commit()
     connection.close()
-    print("Η ΒΔ/πίνακες δημιουργήθηκαν επιτυχώς!")
+    print("succesful database creation!")
 
     return;
 
@@ -455,8 +459,16 @@ def drop_tables(db_path):
     return;
 
 def main():
+    print("ajaja")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    cwd = os.getcwd()
+
+    print("Script Directory (calculated from __file__):", script_dir)
+    #print("Current Working Directory:", cwd)
+    #print(script_dir)
     db_path = "publishing_house.db"
-    schema_file_path = "schema.sql"
+    
+    schema_file_path = script_dir + "/schema.sql"
 
     drop_tables(db_path)
 
