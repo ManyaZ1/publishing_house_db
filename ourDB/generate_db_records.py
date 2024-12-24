@@ -273,7 +273,7 @@ def populate_database(db_path):
         
         start_date = random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
         completion_date = start_date + timedelta(days = random.randint(15, 2 * 365)) # Το άλλαξα σε 2 * 365 το μέγιστο, επειδή τόσο είναι και το contract duration
-        eta_date = completion_date - timedelta(days = random.randint(1, 2 * 365))
+        eta_date = random_date(start_date, completion_date)
         paid = random.choice([0, 1])  # Το boolean στην SQLite αντιστοιχεί σε 0 ή 1
 
         processes.append((
