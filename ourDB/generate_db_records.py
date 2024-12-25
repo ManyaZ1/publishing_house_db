@@ -29,7 +29,7 @@ class PublishingDatabaseManager:
             'printing_houses': 5,
             'publications':    20,
             'contracts':       30,
-            'client_orders':   20,
+            'client_orders':   50,
             'contributions':   40,
         }
 
@@ -305,7 +305,7 @@ class PublishingDatabaseManager:
 
             name = f"{random.choice(self.first_names)} {random.choice(self.last_names)}"
             spec = random.randint(1, 4)  # Must be 1 -> 4 per schema
-            comments = f"Comments for partner with Tax ID {tax_id}"
+            comments = random.randint(1, 5) * "⭐"
             partners.append((name, tax_id, spec, comments))
 
         return partners;
@@ -362,7 +362,7 @@ class PublishingDatabaseManager:
 
             title = random.choice(self.book_titles)
             price = round(random.uniform(5.0, 200.0), 2)
-            stock = random.randint(0, 1000)
+            stock = random.randint(0, 500)
             chosen_genre_id = random.choice(self.all_genre_ids)
             publications.append((title, isbn, price, stock, chosen_genre_id))
 
@@ -372,11 +372,17 @@ class PublishingDatabaseManager:
         """
         Generate contracts, using 'self.n_contracts'.
         """
+        all_start_dates = [
+            self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+            for _ in range(self.n_contracts)
+        ]
+        all_start_dates.sort() # Δεδομένου ότι τα ID είναι ακολουθία αυξανόμενων αριθμών,
+                               # οι παραγγελίες πρέπει να έχουν λογικές ημερομηνίες!
         contracts = []
         contract_id = 1
-        for _ in range(self.n_contracts):
+        for i in range(self.n_contracts):
             payment = round(random.uniform(1000.0, 10000.0), 2)
-            start = self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+            start = all_start_dates[i]
             expiration = start + timedelta(days=random.randint(30, 365))
             partner_tax_id   = random.choice(self.all_partner_tax_ids)
             publication_isbn = random.choice(self.all_isbns)
@@ -401,7 +407,7 @@ class PublishingDatabaseManager:
         """
         used_client_book_pairs = set()
         client_orders = []
-        for _ in range(self.n_client_orders):
+        for i in range(self.n_client_orders):
             while True:
                 client_tax_id = random.choice(self.all_client_tax_ids)
                 publication_isbn = random.choice(self.all_isbns)
@@ -410,7 +416,7 @@ class PublishingDatabaseManager:
                     break;
 
             quantity = random.randint(10, 50)
-            order_date = self._random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
+            order_date = self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
             delivery_date = order_date + timedelta(days=random.randint(1, 30))
             total_cost = round(self.all_isbn_price[publication_isbn] * quantity, 2)
 
@@ -439,7 +445,7 @@ class PublishingDatabaseManager:
                     used_contrib.add((partner_tax_id, chosen_isbn))
                     break;
 
-            start_date = self._random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
+            start_date = self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
             completion_date = start_date + timedelta(days=random.randint(15, 2 * 365))  # up to 2 years
             eta = self._random_date(start_date, completion_date)
             paid = random.choice([0, 1])  # boolean in SQLite can be 0 or 1
@@ -484,10 +490,7 @@ class PublishingDatabaseManager:
 
                     deliver_date = client_deliv_date - timedelta(days=random.randint(1, 60))
                     order_date   = deliver_date - timedelta(days=random.randint(1, 30))
-                    cost_per_unit = random.uniform(
-                        0.2 * self.all_isbn_price[chosen_isbn],
-                        0.6 * self.all_isbn_price[chosen_isbn]
-                    )
+                    cost_per_unit = 0.2 * self.all_isbn_price[chosen_isbn]
                     total_cost = round(cost_per_unit * q, 2)
 
                     printing_orders.append((
@@ -510,10 +513,7 @@ class PublishingDatabaseManager:
                 deliver_dt = order_dt + timedelta(days=random.randint(1, 30))
                 quantity = self.all_isbn_stock[chosen_isbn]
 
-                cost_per_unit = random.uniform(
-                    0.2 * self.all_isbn_price[chosen_isbn],
-                    0.6 * self.all_isbn_price[chosen_isbn]
-                )
+                cost_per_unit = 0.2 * self.all_isbn_price[chosen_isbn]
                 total_cost = round(cost_per_unit * quantity, 2)
 
                 printing_orders.append((
@@ -558,5 +558,5 @@ class PublishingDatabaseManager:
         return;
 
 if __name__ == "__main__":
-    manager = PublishingDatabaseManager(scale_factor=4)
+    manager = PublishingDatabaseManager(scale_factor=3)
     manager.run()
