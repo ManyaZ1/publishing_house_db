@@ -172,8 +172,9 @@ class PublishingHouseApp(tk.Tk):
         return;
 
 def main():
-    cwd = os.getcwd()
-    app = PublishingHouseApp(db_path=os.path.join(cwd, "publishing_house.db")) # Μπορεί να το βρει μόνο αν το τρέξω από το VS
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    new_path   = os.path.dirname(script_dir)
+    app = PublishingHouseApp(db_path=os.path.join(new_path, "publishing_house.db"))
     app.mainloop()
 
     return;
