@@ -166,12 +166,13 @@ class PublishingHouseApp(tk.Tk):
 
     def on_closing(self):
         self.db_manager.close_connection()
+        self.destroy()
         exit() # Exit the program no matter what!
 
         return;
 
 def main():
-    cwd = os.getcwd()
+    cwd = os.path.dirname(os.getcwd())
     app = PublishingHouseApp(db_path=os.path.join(cwd, "publishing_house.db"))
     app.mainloop()
 
