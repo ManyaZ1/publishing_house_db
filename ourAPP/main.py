@@ -173,7 +173,7 @@ class PublishingHouseApp(tk.Tk):
 
 def main():
     cwd = os.getcwd()
-    app = PublishingHouseApp(db_path=os.path.join(cwd, "publishing_house.db"))
+    app = PublishingHouseApp(db_path=os.path.join(cwd, "publishing_house.db")) # Μπορεί να το βρει μόνο αν το τρέξω από το VS
     app.mainloop()
 
     return;
