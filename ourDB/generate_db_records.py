@@ -243,21 +243,21 @@ class PublishingDatabaseManager:
         )
         self.all_isbn_orders_map = {row[0]: row[1] for row in cursor.fetchall()}
 
-        # ---------------- CONTRIBUTES ------------------
-        contributes_data = self._generate_contributions()
-        cursor.executemany(
-            'INSERT INTO "contributes" '
-            '("Partner_TaxId", "Publication-isbn", "estimated_completion_date", '
-            '"start_date", "completion_date", "payment") '
-            'VALUES (?, ?, ?, ?, ?, ?)', contributes_data
-        )
-
         # ------------ ORDER_PRINTING_HOUSE ------------
         printing_orders = self._generate_printing_orders(cursor)
         cursor.executemany(
             'INSERT INTO "order_printing_house" '
             '("Printing-id", "Publication-isbn", "order date", "delivery date", "quntity", "cost") '
             'VALUES (?, ?, ?, ?, ?, ?)', printing_orders
+        )
+
+        # ---------------- CONTRIBUTES ------------------
+        contributes_data = self._generate_contributions(cursor)
+        cursor.executemany(
+            'INSERT INTO "contributes" '
+            '("Partner_TaxId", "Publication-isbn", "estimated_completion_date", '
+            '"start_date", "completion_date", "payment") '
+            'VALUES (?, ?, ?, ?, ?, ?)', contributes_data
         )
 
         # --------------- COMMUNICATION ----------------
@@ -373,7 +373,7 @@ class PublishingDatabaseManager:
         Generate contracts, using 'self.n_contracts'.
         """
         all_start_dates = [
-            self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+            self._random_date(datetime(2005, 1, 1), datetime(2009, 12, 31))
             for _ in range(self.n_contracts)
         ]
         all_start_dates.sort() # Δεδομένου ότι τα ID είναι ακολουθία αυξανόμενων αριθμών,
@@ -383,7 +383,7 @@ class PublishingDatabaseManager:
         for i in range(self.n_contracts):
             payment = round(random.uniform(1000.0, 10000.0), 2)
             start = all_start_dates[i]
-            expiration = start + timedelta(days=random.randint(30, 365))
+            expiration = start + timedelta(days=random.randint(30, 2 * 365))
             partner_tax_id   = random.choice(self.all_partner_tax_ids)
             publication_isbn = random.choice(self.all_isbns)
             description = f"Contract for publication {publication_isbn}"
@@ -416,7 +416,7 @@ class PublishingDatabaseManager:
                     break;
 
             quantity = random.randint(10, 50)
-            order_date = self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
+            order_date = self._random_date(datetime(2010, 1, 1), datetime(2024, 12, 31))
             delivery_date = order_date + timedelta(days=random.randint(1, 30))
             total_cost = round(self.all_isbn_price[publication_isbn] * quantity, 2)
 
@@ -431,29 +431,89 @@ class PublishingDatabaseManager:
 
         return client_orders;
 
-    def _generate_contributions(self):
+    def _generate_contributions(self, cursor):
         """
-        Generate contributes, using 'self.n_contributions'.
+        Generate 'contributes' records so that each partner's contribution
+        is within the [contract_start, contract_end] interval and finishes
+        before the earliest printing order date.
         """
         used_contrib = set()
         contributes_data = []
-        for _ in range(self.n_contributions):
-            while True:
-                partner_tax_id = random.choice(self.all_partner_tax_ids)
-                chosen_isbn = random.choice(self.all_isbns)
-                if (partner_tax_id, chosen_isbn) not in used_contrib:
-                    used_contrib.add((partner_tax_id, chosen_isbn))
-                    break;
 
-            start_date = self._random_date(datetime(2020, 1, 1), datetime(2023, 12, 31))
-            completion_date = start_date + timedelta(days=random.randint(15, 2 * 365))  # up to 2 years
-            eta = self._random_date(start_date, completion_date)
-            paid = random.choice([0, 1])  # boolean in SQLite can be 0 or 1
+        partner_pub_contracts = {}
+        cursor.execute('SELECT "Partner_Tax_Id", "Publication-isbn", "start_date", "expiration_date" FROM "CONTRACT"')
+        rows = cursor.fetchall()
+        for (p_tax_id, pub_isbn, cstart_str, cend_str) in rows:
+            cstart = datetime.strptime(cstart_str, "%Y-%m-%d")
+            cend   = datetime.strptime(cend_str,   "%Y-%m-%d")
+
+            key = (p_tax_id, pub_isbn)
+            if key not in partner_pub_contracts:
+                partner_pub_contracts[key] = []
+            partner_pub_contracts[key].append((cstart, cend))
+
+        """
+        Collect all "valid windows"
+            For each (partner, isbn) + contract window, figure out the
+            earliest printing order date. If there's a valid overlap
+            between [contract_start, contract_end] and printing date,
+            store it in a list.
+        """
+        valid_windows = []  # will hold tuples of:
+        # (partner_tax_id, isbn, contract_start, contract_end, earliest_printing)
+        for key, cstart_end_list in partner_pub_contracts.items():
+            (partner_tax_id, isbn) = key
+
+            # Earliest printing date for this ISBN
+            row = cursor.execute(
+                'SELECT MIN("order date") '
+                'FROM "order_printing_house" '
+                'WHERE "Publication-isbn" = ?', (isbn, )
+            ).fetchone()
+            if row and row[0] is not None:
+                earliest_str = row[0]
+                earliest_printing_date = datetime.strptime(earliest_str, "%Y-%m-%d")
+            else:
+                # if there is no printing order, let's allow a large future date
+                earliest_printing_date = datetime(2030, 12, 31)
+
+            # For each contract window for this pair
+            for (cstart, cend) in cstart_end_list:
+                # The contribution must finish by "min(cend, earliest_printing_date)"
+                # so we only consider a window if cstart < that date
+                if cstart < earliest_printing_date:
+                    # We'll store the actual upper limit for completion
+                    # as whichever is earlier
+                    cupper = min(cend, earliest_printing_date)
+                    # If cstart < cupper, we have a valid window
+                    if cstart < cupper:
+                        valid_windows.append((partner_tax_id, isbn, cstart, cupper))
+
+        random.shuffle(valid_windows)
+
+        # Create up to n_contributions by picking from valid_windows
+        for _ in range(self.n_contributions):
+            if not valid_windows:
+                # no more valid windows => stop early
+                break;
+
+            (partner_tax_id, chosen_isbn, cstart, cupper) = valid_windows.pop()
+            key = (partner_tax_id, chosen_isbn)
+            # if we've already used this pair, skip it
+            if key in used_contrib:
+                continue;
+            used_contrib.add(key)
+
+            completion_date = self._random_date(cstart, cupper)
+            start_date = self._random_date(cstart, completion_date)
+            eta_date = self._random_date(start_date, completion_date)
+
+            paid = random.choice([0, 1])
 
             contributes_data.append((
                 partner_tax_id,
                 chosen_isbn,
-                eta.strftime("%Y-%m-%d"),
+                eta_date.strftime("%Y-%m-%d"),
                 start_date.strftime("%Y-%m-%d"),
                 completion_date.strftime("%Y-%m-%d"),
                 paid
@@ -475,9 +535,11 @@ class PublishingDatabaseManager:
                 num_partial_orders = random.randint(1, 3)
                 partial_quantities = self._random_partition(total_needed, num_partial_orders)
 
-                # Get a reference client delivery date to ensure we print on time
+                # Get a reference {MIN} client delivery date to ensure we print on time
                 client_deliv_str = cursor.execute(
-                    'SELECT "delivery date" FROM "client_orders" WHERE "Publication-isbn" = ? LIMIT 1', (chosen_isbn,)
+                    'SELECT MIN("delivery date") '
+                    'FROM "client_orders" '
+                    'WHERE "Publication-isbn" = ?', (chosen_isbn,)
                 ).fetchone()[0]
                 client_deliv_date = datetime.strptime(client_deliv_str, "%Y-%m-%d")
 
@@ -509,7 +571,7 @@ class PublishingDatabaseManager:
                         used_ph_isbn_pairs.add((printing_id, chosen_isbn))
                         break;
 
-                order_dt = self._random_date(datetime(2021, 1, 1), datetime(2023, 12, 31))
+                order_dt = self._random_date(datetime(2010, 1, 1), datetime(2024, 12, 31))
                 deliver_dt = order_dt + timedelta(days=random.randint(1, 30))
                 quantity = self.all_isbn_stock[chosen_isbn]
 
