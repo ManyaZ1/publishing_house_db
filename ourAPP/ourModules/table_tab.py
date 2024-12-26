@@ -3,15 +3,17 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
+
 class TableTab(ttk.Frame):
     """
     Each tab handles CRUD for a single table.
     """
-    def __init__(self, parent_notebook, db_manager, table_name):
+    def __init__(self, parent_notebook, db_manager, table_name, display_name=None):
         super().__init__(parent_notebook)
         
         self.db_manager = db_manager
         self.table_name = table_name
+        self.display_name = display_name or table_name.capitalize() # Use display_name if provided
         
         # Retrieve columns info
         self.columns_info = self.db_manager.get_table_columns(self.table_name)
@@ -20,7 +22,7 @@ class TableTab(ttk.Frame):
         # Layout: top for Treeview, bottom for controls
         self.create_treeview_section()
         self.create_form_section()
-        self.populate_treeview()  # load data
+        self.populate_treeview() # load data
 
         return;
     
@@ -45,6 +47,8 @@ class TableTab(ttk.Frame):
         for col in self.col_names:
             self.tree.heading(col, text=col)
             self.tree.column(col, width=120, anchor='center')
+            if col == "comments":
+                self.tree.column(col, width=120, anchor='w') # w: Align all data in your Treeview to the left! ⭐
         
         # Bind selection
         self.tree.bind("<<TreeviewSelect>>", self.on_row_select)
@@ -63,7 +67,7 @@ class TableTab(ttk.Frame):
     
     def create_form_section(self):
         """A frame with Entry widgets for each column (for insert/edit)."""
-        self.form_frame = ttk.LabelFrame(self, text="Insert / Edit Record", padding=10)
+        self.form_frame = ttk.LabelFrame(self, text=f"{self.display_name} - Insert / Edit Record", padding=10)
         self.form_frame.pack(side="bottom", fill="x", padx=5, pady=5)
         
         self.entry_vars = {}
