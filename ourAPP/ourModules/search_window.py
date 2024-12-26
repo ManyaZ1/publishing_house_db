@@ -2,31 +2,22 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox
+from ourModules.translations import TAB_NAME_MAPPING, TAB_NAME_MAPPING_REVERSE
+# ourModules.translations.py, επειδή το θέλει βάση το που είναι το αρχείο από την θέση της main.py
 
 class SearchWindow(tk.Toplevel):
-    """
-    A separate Toplevel window for searching the database.
-    """
     def __init__(self, parent, db_manager):
         super().__init__(parent)
         
         self.title("Search Database")
-
-        window_width = 1200
-        window_height = 700
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
+        self.initialize_window()
         self.db_manager = db_manager
         
         # Container frame
         container = ttk.Frame(self, padding=10)
         container.pack(expand=True, fill='both')
         
-        lbl_title = ttk.Label(container, text="Search the Database", font=('Arial', 14, 'bold'))
+        lbl_title = ttk.Label(container, text="- Search the Database -", font=('Arial', 14, 'bold'))
         lbl_title.pack(pady=5)
         
         controls_frame = ttk.Frame(container)
@@ -37,8 +28,17 @@ class SearchWindow(tk.Toplevel):
         lbl_table.grid(row=0, column=0, padx=5, pady=5)
         
         self.table_var = tk.StringVar()
-        tables = self.db_manager.get_table_list()
-        self.cmb_table = ttk.Combobox(controls_frame, textvariable=self.table_var, values=tables, state='readonly')
+        
+        # 3. Get the actual table names from the DB, then map them to friendly names
+        tables_raw = self.db_manager.get_table_list()  # actual DB table names
+        tables_display = [TAB_NAME_MAPPING.get(t, t) for t in tables_raw]  # friendly names or fallback
+        
+        self.cmb_table = ttk.Combobox(
+            controls_frame,
+            textvariable=self.table_var,
+            values=tables_display,
+            state='readonly'
+        )
         self.cmb_table.grid(row=0, column=1, padx=5, pady=5)
         self.cmb_table.bind("<<ComboboxSelected>>", self.on_table_selected)
         
@@ -83,28 +83,46 @@ class SearchWindow(tk.Toplevel):
         self.scroll_y.config(command=self.results_tree.yview)
 
         return;
+
+    def initialize_window(self):
+        window_width = 1200
+        window_height = 700
+        screen_width = self.winfo_screenwidth()
+        screen_height = self.winfo_screenheight()
+        x = (screen_width // 2) - (window_width // 2)
+        y = (screen_height // 2) - (window_height // 2)
+        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
+        return;
     
     def on_table_selected(self, event):
         """Load column names for the chosen table."""
-        table_name = self.table_var.get()
-        columns_info = self.db_manager.get_table_columns(table_name)
+        # 4. Convert the friendly name from the combo box back to the actual table name
+        user_friendly_name = self.table_var.get()
+        actual_table_name = TAB_NAME_MAPPING_REVERSE.get(user_friendly_name, user_friendly_name)
+
+        columns_info = self.db_manager.get_table_columns(actual_table_name)
         col_names = [col[1] for col in columns_info]
+        
         self.cmb_column['values'] = col_names
         if col_names:
             self.cmb_column.current(0)
-
+        
         return;
     
     def run_search(self):
         """Build a SELECT query based on the user's inputs."""
-        table = self.table_var.get()
+        # 5. Again, convert the selected table from friendly name to actual DB name
+        table_friendly = self.table_var.get()
+        table = TAB_NAME_MAPPING_REVERSE.get(table_friendly, table_friendly)
+        
         column = self.column_var.get()
         operator = self.op_var.get()
         value = self.value_var.get().strip()
         
         if not table or not column:
             messagebox.showwarning("Warning", "Please select a table and column.")
-            return
+            return;
         
         if operator.upper() == "LIKE":
             where_clause = f'"{column}" LIKE ?'
@@ -140,5 +158,5 @@ class SearchWindow(tk.Toplevel):
         
         for row in rows:
             self.results_tree.insert("", "end", values=row)
-        
+
         return;

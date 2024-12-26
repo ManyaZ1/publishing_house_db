@@ -1,6 +1,7 @@
 # main.py
 
 import os
+from sys import exit
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font  # Import font for better font handling
@@ -10,26 +11,12 @@ from ourModules.database_manager import DatabaseManager
 from ourModules.table_tab import TableTab
 from ourModules.search_window import SearchWindow
 from ourModules.stats_window import StatsWindow
+from ourModules.translations import TAB_NAME_MAPPING
 
 class PublishingHouseApp(tk.Tk):
     script_dir = os.path.dirname(os.path.abspath(__file__))
     new_path = os.path.dirname(script_dir)
     db_path = os.path.join(new_path, "publishing_house.db")
-
-    TAB_NAME_MAPPING = {
-        "PARTNER": "Partners",
-        "CONTRACT": "Contracts",
-        "CLIENT": "Clients",
-        "PRINTING_HOUSE": "Printing Houses",
-        "GENRE": "Genres",
-        "PUBLICATION": "Publications",
-        "client_orders": "Client Orders",
-        "contributes": "Contributes",
-        "order_printing_house": "Printing House Orders",
-        "communication-CLIENT": "Communication - Clients",
-        "communication-PARTNER": "Communication - Partners",
-        "communication-PRINTING": "Communication - Printing Houses"
-    }
 
     def __init__(self, db_path):
         super().__init__()
@@ -75,7 +62,7 @@ class PublishingHouseApp(tk.Tk):
         self.table_frames = {}
         table_list = self.db_manager.get_table_list()
         for table in table_list:
-            display_name = self.TAB_NAME_MAPPING.get(table)
+            display_name = TAB_NAME_MAPPING.get(table)
             if not display_name:
                 print(f"No display name mapping found for table '{table}'. Using default.")
                 display_name = table.capitalize()
@@ -158,6 +145,8 @@ class PublishingHouseApp(tk.Tk):
             )
             # Center the label
             canvas.create_window(width//2, height//2, window=label)
+
+            return
         
         # Initial draw
         self.after(100, draw_emojis) # Delay to allow canvas to initialize size
@@ -177,12 +166,12 @@ class PublishingHouseApp(tk.Tk):
 
     def on_closing(self):
         self.db_manager.close_connection()
-        self.destroy()
+        exit() # Exit the program no matter what!
+
         return;
 
 def main():
     cwd = os.getcwd()
-    print(f"Current working directory: {cwd}")
     app = PublishingHouseApp(db_path=os.path.join(cwd, "publishing_house.db"))
     app.mainloop()
 

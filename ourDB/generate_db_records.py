@@ -386,7 +386,7 @@ class PublishingDatabaseManager:
             expiration = start + timedelta(days=random.randint(30, 2 * 365))
             partner_tax_id   = random.choice(self.all_partner_tax_ids)
             publication_isbn = random.choice(self.all_isbns)
-            description = f"Contract for publication {publication_isbn}"
+            description = random.choice(["Easy", "Medium", "Hard", "Very hard"])
 
             contracts.append((
                 payment,
