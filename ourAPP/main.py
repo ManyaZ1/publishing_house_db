@@ -172,7 +172,7 @@ class PublishingHouseApp(tk.Tk):
         return;
 
 def main():
-    cwd = os.path.dirname(os.getcwd())
+    cwd = os.getcwd()
     app = PublishingHouseApp(db_path=os.path.join(cwd, "publishing_house.db"))
     app.mainloop()
 
