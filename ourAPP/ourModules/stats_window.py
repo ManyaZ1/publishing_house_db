@@ -67,7 +67,10 @@ class StatsWindow(tk.Toplevel):
             titles = [r[0] for r in rows]
             stocks = [r[1] for r in rows]
         except Exception as e:
-            messagebox.showerror("Error", f"Could not fetch book stock:\n{e}")
+            messagebox.showerror(
+                "Error fetching Book Stock",
+                f"Could not fetch book stock data:\n\n{type(e).__name__}: {e}"
+            )
             return;
         
         fig, ax = plt.subplots(figsize=(6,4))

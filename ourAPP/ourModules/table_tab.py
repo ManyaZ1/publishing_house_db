@@ -8,6 +8,15 @@ class TableTab(ttk.Frame):
     """
     Each tab handles CRUD for a single table.
     """
+    SPECIALIZATION_MAP = {
+        1: "Translator",
+        2: "Writer",
+        3: "Graphic designer",
+        4: "Editor"
+    }
+    # Reverse mapping if you store the integer in DB
+    SPECIALIZATION_REVERSE_MAP = {v: k for k, v in SPECIALIZATION_MAP.items()}
+
     def __init__(self, parent_notebook, db_manager, table_name, display_name=None):
         super().__init__(parent_notebook)
         
@@ -53,7 +62,7 @@ class TableTab(ttk.Frame):
         # Bind selection
         self.tree.bind("<<TreeviewSelect>>", self.on_row_select)
         
-        # Buttons for Edit & Delete
+        # Buttons for Edit - Delete - Unselect
         self.btn_frame = ttk.Frame(self)
         self.btn_frame.pack(side="top", fill="x", padx=5, pady=5)
         
@@ -62,6 +71,9 @@ class TableTab(ttk.Frame):
         
         self.delete_btn = ttk.Button(self.btn_frame, text="Delete Selected", command=self.delete_selected)
         self.delete_btn.pack(side="left", padx=5)
+
+        self.unselect_btn = ttk.Button(self.btn_frame, text="Unselect", command=self.unselect_row)
+        self.unselect_btn.pack(side="left", padx=5)
 
         return;
     
@@ -75,15 +87,27 @@ class TableTab(ttk.Frame):
         # Create a row of labels+entries for each column
         for index, colinfo in enumerate(self.columns_info):
             col_name = colinfo[1]
-            
+
             lbl = ttk.Label(self.form_frame, text=col_name, width=20)
             lbl.grid(row=index, column=0, padx=5, pady=2, sticky='w')
-            
+
             var = tk.StringVar()
-            ent = ttk.Entry(self.form_frame, textvariable=var, width=30)
-            ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
+            
+            if col_name.lower() == "specialisation": # Use a Combobox
+                ent = ttk.Combobox(
+                    self.form_frame,
+                    textvariable=var,
+                    values=[self.SPECIALIZATION_MAP[i] for i in self.SPECIALIZATION_MAP],
+                    state='readonly',
+                    width=28
+                )
+                ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
+            else: # Normal Entry
+                ent = ttk.Entry(self.form_frame, textvariable=var, width=30)
+                ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
+
             self.entry_vars[col_name] = var
-        
+
         # Insert / Update button
         self.action_btn = ttk.Button(self.form_frame, text="Insert", command=self.insert_record)
         self.action_btn.grid(row=len(self.columns_info), column=0, columnspan=2, pady=10)
@@ -91,13 +115,22 @@ class TableTab(ttk.Frame):
         return;
     
     def populate_treeview(self):
-        """Load all data from the table into the treeview."""
+        # Clear existing rows
         for row in self.tree.get_children():
             self.tree.delete(row)
-        
+
         rows = self.db_manager.fetchall(f'SELECT * FROM "{self.table_name}"')
+
         for r in rows:
-            self.tree.insert("", "end", values=r)
+            display_values = []
+            for col_idx, col_val in enumerate(r):
+                col_name = self.col_names[col_idx]
+                if col_name.lower() == "specialisation" and col_val is not None:
+                    # Convert integer to display string
+                    col_val = self.SPECIALIZATION_MAP.get(col_val, col_val)
+                display_values.append(col_val)
+            
+            self.tree.insert("", "end", values=display_values)
 
         return;
     
@@ -105,7 +138,7 @@ class TableTab(ttk.Frame):
         """When user selects a row from the tree, fill the form for editing."""
         selected_item = self.tree.selection()
         if not selected_item:
-            return
+            return;
         row_data = self.tree.item(selected_item, 'values')
         
         # Fill in the form
@@ -122,7 +155,13 @@ class TableTab(ttk.Frame):
         data = []
         for col in self.col_names:
             val = self.entry_vars[col].get().strip()
-            data.append(val if val != '' else None)
+
+            if col.lower() == "specialisation": # Convert from "Translator" → 1, ...
+                val = self.SPECIALIZATION_REVERSE_MAP.get(val, None)
+            else: # If empty, store None
+                val = val if val != '' else None
+
+            data.append(val)
         
         placeholders = ", ".join(["?" for _ in data])
         columns = ", ".join([f'"{c}"' for c in self.col_names])
@@ -145,13 +184,18 @@ class TableTab(ttk.Frame):
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "No row selected.")
-            return
+            return;
         
         old_row_data = self.tree.item(selected_item, 'values')
         
         new_data = []
         for col_name in self.col_names:
-            new_data.append(self.entry_vars[col_name].get().strip())
+            val = self.entry_vars[col_name].get().strip()
+            if col_name.lower() == "specialisation":
+                val = self.SPECIALIZATION_REVERSE_MAP.get(val, None)
+            else:
+                val = val if val != '' else None
+            new_data.append(val)
         
         set_clause = ", ".join([f'"{c}"=?' for c in self.col_names])
         
@@ -239,5 +283,38 @@ class TableTab(ttk.Frame):
         for col in self.entry_vars:
             self.entry_vars[col].set("")
         self.action_btn.configure(text="Insert", command=self.insert_record)
+
+        return;
+
+    def unselect_row(self):
+        """Clear any selection in the TreeView and reset the form."""
+        self.tree.selection_remove(*self.tree.selection())  # removes all selections
+        self.clear_form()  # the same method that resets the entry fields
+        
+        return;
+
+    def select_row_data(self, row_data):
+        """
+        Fill the form with the given row_data and select the matching row in the TreeView.
+        """
+        # 1. Fill in the form fields
+        for col_name, value in zip(self.col_names, row_data):
+            self.entry_vars[col_name].set("" if value is None else str(value))
+
+        # 2. Find a row in the Treeview that matches `row_data` exactly
+        self.tree.selection_remove(*self.tree.selection())  # Clear any previous selection
+        
+        for item in self.tree.get_children():
+            item_values = self.tree.item(item, "values")
+            
+            # Compare the item_values with the row_data tuple
+            # Note: They must match exactly!
+            if item_values == row_data:
+                self.tree.selection_set(item)
+                self.tree.focus(item)  # move focus to that item
+                break
+
+        # 3. Switch the action button to "Update"
+        self.action_btn.configure(text="Update", command=self.update_record)
 
         return;
