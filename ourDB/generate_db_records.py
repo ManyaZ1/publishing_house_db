@@ -305,7 +305,7 @@ class PublishingDatabaseManager:
 
             name = f"{random.choice(self.first_names)} {random.choice(self.last_names)}"
             spec = random.randint(1, 4)  # Must be 1 -> 4 per schema
-            comments = random.randint(1, 5) * "⭐"
+            comments = random.randint(1, 5)
             partners.append((name, tax_id, spec, comments))
 
         return partners;
