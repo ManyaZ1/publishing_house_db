@@ -84,9 +84,46 @@ class PublishingHouseApp(tk.Tk):
         canvas = tk.Canvas(home_frame, bg="#f0d9b5", highlightthickness=0)
         canvas.pack(fill='both', expand=True)
         
-        emoji = "📖"
-        emoji_font = ("Arial", 25)
-        def draw_emojis(event=None):
+        emoji = "📖 📖"#"📖"
+        emoji_font = ("Arial", 280)
+        def draw_emoji(event=None):
+            canvas.delete("all") # Clear existing emojis
+            #(width, height) = (canvas.winfo_width(), canvas.winfo_height())
+            #draw the emoji in the center of the canvas with adjusted font size
+
+            (width, height) = (canvas.winfo_width(), canvas.winfo_height())
+            canvas.create_text(
+                width//2, height//2-height//14,
+                text=emoji,
+                font=emoji_font,
+                fill= '#5C4033' #"#ba5d7e"#"#d1bb93" # Emoji color (adjust as needed)
+            )
+            # Add the instruction label on top
+            instruction_text = (
+                "Welcome to the Publishing House Database!\n\n"
+                "Use the tabs above to view, insert, or edit data in each table.\n"
+                "Or click the buttons (top-left) to open the Search or Statistics windows.\n\n"
+                "Enjoy exploring your database!"
+            )
+            label_width = 800
+            label = tk.Label(
+                canvas,
+                text=instruction_text,
+                anchor="center",
+                #height= height // 10,
+                #width= canvas.winfo_width() // 20,
+                font=('Calibri', 14, 'bold'),
+                bg="#f0d9b5",#  '#e8ddc9',           #'#ffffff', # Solid background for readability
+                fg='#5C4033',#"#333",
+                justify='center',
+                pady=10,
+                wraplength=label_width
+            )
+            label.place(relx=0.5, rely=0.15, anchor="center")  # Adjust `rely` to 0.4 for slightly above center
+            # Center the label
+            #anvas.create_window(width//2, height//2, window=label)
+            return;
+        '''def draw_emojis(event=None):
             canvas.delete("all") # Clear existing emojis
             (width, height) = (canvas.winfo_width(), canvas.winfo_height())
 
@@ -130,13 +167,13 @@ class PublishingHouseApp(tk.Tk):
             # Center the label
             canvas.create_window(width//2, height//2, window=label)
 
-            return;
+            return;'''
         
         # Initial draw
-        self.after(100, draw_emojis) # Delay to allow canvas to initialize size
+        self.after(100, draw_emoji) # Delay to allow canvas to initialize size
         
         # Bind the resize event to redraw emojis
-        canvas.bind("<Configure>", draw_emojis)
+        canvas.bind("<Configure>", draw_emoji)
 
         return;
 
