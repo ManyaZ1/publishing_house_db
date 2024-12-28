@@ -28,17 +28,44 @@ class StatsWindow(tk.Toplevel):
         btn_frame = ttk.Frame(container)
         btn_frame.pack(pady=5)
         
-        # Example: Show Book Stock
-        btn_show_stock = ttk.Button(btn_frame, text="Show Book Stock Chart", command=self.plot_book_stock)
+        # Show Book Stock
+        btn_show_stock = ttk.Button(
+            btn_frame, text="Show Books Stock",
+            command=lambda:self.plot_chart(
+                'SELECT "title", "stock" FROM "PUBLICATION"',
+                'Book Title', 'Stock Count', 'Book Stock Levels', 'blue'
+            )
+        )
         btn_show_stock.pack(side="left", padx=5)
 
         # Show Money Earned
-        btn_money_earned = ttk.Button(btn_frame, text="Show Money Earned", command=self.plot_money_earned)
+        btn_money_earned = ttk.Button(
+            btn_frame, text="Show Money Earned",
+            command=lambda:self.plot_chart(
+                '''
+                SELECT strftime('%Y', "order date") AS Year, SUM("payment") AS Total_Earned
+                FROM "client_orders"
+                GROUP BY Year
+                ORDER BY Year
+                ''',
+                'Year', 'Money Earned', 'Money Earned by Year', 'purple'
+            )
+        )
         btn_money_earned.pack(side="left", padx=5)
 
         # Show Accounts Payable to Printing House
-        btn_accounts_payable = ttk.Button(btn_frame, text="Show Accounts Payable to Printing House",
-                                          command=self.plot_accounts_payable_printing_house)
+        btn_accounts_payable = ttk.Button(
+            btn_frame, text="Show Accounts Payable to Printing House",
+            command=lambda:self.plot_chart(
+                '''
+                SELECT strftime('%Y', "order date") AS Year, SUM("cost") AS Total_Payable
+                FROM "order_printing_house"
+                GROUP BY Year
+                ORDER BY Year
+                ''',
+                'Year', 'Total Payable', 'Printing Costs by Year', 'green'
+            )
+        )
         btn_accounts_payable.pack(side="left", padx=5)
         
         # A frame to hold the matplotlib figure
@@ -59,57 +86,26 @@ class StatsWindow(tk.Toplevel):
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         return;
-    
-    def plot_book_stock(self):
-        """Example: Query PUBLICATION table for (title, stock), make a bar chart."""
+
+    def plot_chart(self, sql_query, x_lable_name, y_label_name, title_name, chart_color):
+        """
+        A universal chart plotting function.
+        """
         try:
-            rows = self.db_manager.fetchall('SELECT "title", "stock" FROM "PUBLICATION"')
-            titles = [r[0] for r in rows]
-            stocks = [r[1] for r in rows]
+            rows = self.db_manager.fetchall(sql_query)
+            x_list = [r[0] if r[0] else "Unknown" for r in rows]
+            y_list = [r[1] if r[1] else 0 for r in rows]
         except Exception as e:
             messagebox.showerror(
-                "Error fetching Book Stock",
-                f"Could not fetch book stock data:\n\n{type(e).__name__}: {e}"
+                "Data error", f"Could not fetch data:\n\n{type(e).__name__}: {e}"
             )
             return;
-        
-        fig, ax = plt.subplots(figsize=(6,4))
-        ax.bar(titles, stocks, color='blue')
-        ax.set_xlabel('Book Title', fontsize=12)
-        ax.set_ylabel('Stock Count', fontsize=12)
-        ax.set_title('Book Stock Levels', fontsize=14)
-        plt.xticks(rotation=45, ha="right")
-        plt.tight_layout()
-        
-        self.show_plot(fig)
 
-        return;
-    
-    def plot_money_earned(self):
-        """
-        Example: sum of "payment" per year from the "client_orders" table.
-        Adjust as needed if your schema differs.
-        """
-        try:
-            rows = self.db_manager.fetchall('''
-                SELECT strftime('%Y', "order date") AS Year, SUM("payment") AS Total_Earned
-                FROM "client_orders"
-                GROUP BY Year
-                ORDER BY Year
-            ''')
-            # Each row is (Year, Total_Earned)
-            years = [r[0] if r[0] else "Unknown" for r in rows]
-            sums = [r[1] if r[1] else 0 for r in rows]
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Could not fetch money earned:\n{e}")
-            return;
-        
         fig, ax = plt.subplots(figsize=(6,4))
-        ax.bar(years, sums, color='green')
-        ax.set_xlabel('Year', fontsize=12)
-        ax.set_ylabel('Money Earned', fontsize=12)
-        ax.set_title('Money Earned by Year', fontsize=14)
+        ax.bar(x_list, y_list, color=chart_color)
+        ax.set_xlabel(x_lable_name, fontsize=12)
+        ax.set_ylabel(y_label_name, fontsize=12)
+        ax.set_title(title_name, fontsize=14)
         plt.xticks(rotation=45, ha="right")
         plt.tight_layout()
         
@@ -117,34 +113,6 @@ class StatsWindow(tk.Toplevel):
 
         return;
 
-    def plot_accounts_payable_printing_house(self):
-        try:
-            rows = self.db_manager.fetchall('''
-                SELECT strftime('%Y', "order date") AS Year, SUM("cost") AS Total_Payable
-                FROM "order_printing_house"
-                GROUP BY Year
-                ORDER BY Year
-            ''')
-            # Each row is (Year, Total_Payable)
-            years = [r[0] if r[0] else "Unknown" for r in rows]
-            sums = [r[1] if r[1] else 0 for r in rows]
-            
-        except Exception as e:
-            messagebox.showerror("Error", f"Could not fetch accounts payable:\n{e}")
-            return;
-        
-        fig, ax = plt.subplots(figsize=(6,4))
-        ax.bar(years, sums, color='green')
-        ax.set_xlabel('Year', fontsize=12)
-        ax.set_ylabel('Total Payable', fontsize=12)
-        ax.set_title('Printing Costs by Year', fontsize=14)
-        plt.xticks(rotation=45, ha="right")
-        plt.tight_layout()
-        
-        self.show_plot(fig)
-
-        return;
-    
     def show_plot(self, fig):
         """Embed the Matplotlib figure in the plot_frame."""
         for child in self.plot_frame.winfo_children():
