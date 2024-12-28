@@ -30,9 +30,13 @@ class StatsWindow(tk.Toplevel):
         
         # Show Book Stock
         btn_show_stock = ttk.Button(
-            btn_frame, text="Show Books Stock",
+            btn_frame, text="Books Stock",
             command=lambda:self.plot_chart(
-                'SELECT "title", "stock" FROM "PUBLICATION"',
+                '''
+                SELECT "title", "stock"
+                FROM "PUBLICATION"
+                ORDER BY "stock" DESC
+                ''',
                 'Book Title', 'Stock Count', 'Book Stock Levels', 'blue'
             )
         )
@@ -40,7 +44,7 @@ class StatsWindow(tk.Toplevel):
 
         # Show Money Earned
         btn_money_earned = ttk.Button(
-            btn_frame, text="Show Money Earned",
+            btn_frame, text="Money Earned",
             command=lambda:self.plot_chart(
                 '''
                 SELECT strftime('%Y', "order date") AS Year, SUM("payment") AS Total_Earned
@@ -55,7 +59,7 @@ class StatsWindow(tk.Toplevel):
 
         # Show Accounts Payable to Printing House
         btn_accounts_payable = ttk.Button(
-            btn_frame, text="Show Accounts Payable to Printing House",
+            btn_frame, text="Accounts Payable to Printing House",
             command=lambda:self.plot_chart(
                 '''
                 SELECT strftime('%Y', "order date") AS Year, SUM("cost") AS Total_Payable
@@ -67,6 +71,21 @@ class StatsWindow(tk.Toplevel):
             )
         )
         btn_accounts_payable.pack(side="left", padx=5)
+
+        # Show Each Book's Quantity Sales
+        btn_book_sales = ttk.Button(
+            btn_frame, text="Book Sales",
+            command=lambda:self.plot_chart(
+                '''
+                SELECT PUBLICATION."title", SUM("client_orders"."quantity") AS Total_Sales
+                FROM "client_orders" JOIN "PUBLICATION" ON "client_orders"."Publication-isbn"="PUBLICATION"."isbn"
+                GROUP BY "PUBLICATION"."title"
+                ORDER BY Total_Sales DESC
+                ''',
+                'Book Title', 'Total Sales', 'Book Sales by (Client) Quantity Orders', 'orange'
+            )
+        )
+        btn_book_sales.pack(side="left", padx=5)
         
         # A frame to hold the matplotlib figure
         self.plot_frame = ttk.Frame(container)
@@ -96,9 +115,8 @@ class StatsWindow(tk.Toplevel):
             x_list = [r[0] if r[0] else "Unknown" for r in rows]
             y_list = [r[1] if r[1] else 0 for r in rows]
         except Exception as e:
-            messagebox.showerror(
-                "Data error", f"Could not fetch data:\n\n{type(e).__name__}: {e}"
-            )
+            messagebox.showerror("Data error", f"Could not fetch data:\n\n{type(e).__name__}: {e}")
+
             return;
 
         fig, ax = plt.subplots(figsize=(6,4))
