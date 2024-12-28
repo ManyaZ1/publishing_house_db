@@ -15,6 +15,11 @@ TAB_NAME_MAPPING = {
 
 TAB_NAME_MAPPING_REVERSE = {v: k for k, v in TAB_NAME_MAPPING.items()}
 
+def main():
+    for key, value in TAB_NAME_MAPPING.items():
+        print(f"{key} -> {value}")
+
+    return;
+
 if __name__ == "__main__":
-    print(TAB_NAME_MAPPING_REVERSE)
-    print(TAB_NAME_MAPPING)
+    main()

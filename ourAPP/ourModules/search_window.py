@@ -67,9 +67,13 @@ class SearchWindow(tk.Toplevel):
         self.ent_value = ttk.Entry(controls_frame, textvariable=self.value_var)
         self.ent_value.grid(row=3, column=1, padx=5, pady=5)
         
+        # Edit button - Transfer Data in main window
+        btn_select = ttk.Button(controls_frame, text="Edit selected", command=self.select_for_editing)
+        btn_select.grid(row=4, column=0, columnspan=1, pady=5)
+
         # Search button
         btn_search = ttk.Button(controls_frame, text="Search", command=self.run_search)
-        btn_search.grid(row=4, column=0, columnspan=2, pady=5)
+        btn_search.grid(row=4, column=1, columnspan=1, pady=5)
         
         # Treeview for results
         self.tree_frame = ttk.Frame(container)
@@ -158,5 +162,26 @@ class SearchWindow(tk.Toplevel):
         
         for row in rows:
             self.results_tree.insert("", "end", values=row)
+
+        return;
+
+    def select_for_editing(self):
+        # 1. Get selected row from the results_tree
+        selected = self.results_tree.selection()
+        if not selected:
+            messagebox.showwarning("No selection", "Please select a row in the search results first.")
+            return;
+        
+        # We assume only one row selected
+        row_data = self.results_tree.item(selected, 'values')
+        
+        # 2. Also get the actual table name
+        table_friendly = self.table_var.get()
+        table = TAB_NAME_MAPPING_REVERSE.get(table_friendly, table_friendly)
+        
+        # 3. Call a method on the parent (the main app) to select the row
+        self.master.select_row_in_table(table, row_data)
+        
+        self.destroy()
 
         return;

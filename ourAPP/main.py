@@ -3,14 +3,13 @@
 import os
 from sys import exit
 import tkinter as tk
-from tkinter import ttk
-from tkinter import font  # Import font for better font handling
+from tkinter import ttk, messagebox
 
-# Import your modules from the mymodules directory
 from ourModules.database_manager import DatabaseManager
 from ourModules.table_tab import TableTab
 from ourModules.search_window import SearchWindow
 from ourModules.stats_window import StatsWindow
+
 from ourModules.translations import TAB_NAME_MAPPING
 
 class PublishingHouseApp(tk.Tk):
@@ -51,7 +50,7 @@ class PublishingHouseApp(tk.Tk):
         self.stats_button = ttk.Button(self.top_button_frame, text="Statistics", command=self.open_stats_window)
         self.stats_button.pack(side="left", padx=5)
         
-        # Notebook
+        # Notebook. Η λειτουργία του notebook είναι να μπορεί να έχει πολλά tabs
         self.notebook = ttk.Notebook(self)
         self.notebook.pack(expand=True, fill='both', padx=10, pady=10)
         
@@ -59,10 +58,10 @@ class PublishingHouseApp(tk.Tk):
         self.create_home_tab()
         
         # Create a tab for each table in the DB
-        self.table_frames = {}
-        table_list = self.db_manager.get_table_list()
+        self.table_frames = {} # Store the TableTab instances
+        table_list = self.db_manager.get_table_list() # Get the list of tables from the DB
         for table in table_list:
-            display_name = TAB_NAME_MAPPING.get(table)
+            display_name = TAB_NAME_MAPPING.get(table) # Get the friendly name from the mapping
             if not display_name:
                 print(f"No display name mapping found for table '{table}'. Using default.")
                 display_name = table.capitalize()
@@ -86,38 +85,23 @@ class PublishingHouseApp(tk.Tk):
         canvas.pack(fill='both', expand=True)
         
         emoji = "📖"
-        # Select a font that supports emojis. Adjust based on your OS.
-        available_fonts = font.families()
-        if "Segoe UI Emoji" in available_fonts:
-            emoji_font_family = "Segoe UI Emoji" # Windows
-        elif "Apple Color Emoji" in available_fonts:
-            emoji_font_family = "Apple Color Emoji" # macOS
-        else:
-            emoji_font_family = "Arial" # Fallback, may not support emojis
-        
-        emoji_font_size = 25  # Size
-        emoji_font = (emoji_font_family, emoji_font_size)
-        
-        # Function to draw emojis on the canvas
+        emoji_font = ("Arial", 25)
         def draw_emojis(event=None):
             canvas.delete("all") # Clear existing emojis
-            width = canvas.winfo_width()
-            height = canvas.winfo_height()
-            emoji_spacing_x = 50 # Horizontal spacing between emojis
-            emoji_spacing_y = 40 # Vertical spacing between emojis
+            (width, height) = (canvas.winfo_width(), canvas.winfo_height())
+
+            # Horizontal & Vertical spacing between emojis
+            (emoji_spacing_x, emoji_spacing_y) = (50, 40)
 
             # Introduce padding to prevent cutting emojis at edges
-            padding_x = emoji_spacing_x // 2
-            padding_y = emoji_spacing_y // 2
+            (padding_x, padding_y) = (emoji_spacing_x // 2, emoji_spacing_y // 2)
             
             # Calculate number of emojis that fit horizontally and vertically
-            columns = width // emoji_spacing_x
-            rows = height // emoji_spacing_y
+            (columns, rows) = (width // emoji_spacing_x, height // emoji_spacing_y)
             
             for row in range(rows):
                 for col in range(columns):
-                    x = col * emoji_spacing_x + padding_x
-                    y = row * emoji_spacing_y + padding_y
+                    (x, y) = (col * emoji_spacing_x + padding_x, row * emoji_spacing_y + padding_y)
                     canvas.create_text(
                         x, y,
                         text=emoji,
@@ -146,7 +130,7 @@ class PublishingHouseApp(tk.Tk):
             # Center the label
             canvas.create_window(width//2, height//2, window=label)
 
-            return
+            return;
         
         # Initial draw
         self.after(100, draw_emojis) # Delay to allow canvas to initialize size
@@ -165,9 +149,28 @@ class PublishingHouseApp(tk.Tk):
         return;
 
     def on_closing(self):
-        self.db_manager.close_connection()
-        self.destroy()
-        exit() # Exit the program no matter what!
+        """Prompt user, then close connection and destroy window if confirmed."""
+        if messagebox.askokcancel("Quit", "Do you really want to quit?"):
+            self.db_manager.close_connection()
+            exit();
+
+        return;
+
+    def select_row_in_table(self, table_name, row_data):
+        # table_name should exactly match a key in self.table_frames
+        if table_name not in self.table_frames:
+            messagebox.showerror("Error", f"Table '{table_name}' not found in table_frames!")
+            return
+
+        # Switch to that table's tab
+        # One way is to find the index:
+        keys_list = list(self.table_frames.keys())
+        index = keys_list.index(table_name)
+        self.notebook.select(index + 1) # +1 because the first tab is the "Home" tab!
+
+        # Then fill in the data
+        frame = self.table_frames[table_name]
+        frame.select_row_data(row_data) # Call the method in TableTab
 
         return;
 

@@ -46,9 +46,11 @@ class DatabaseManager:
     
     def get_table_list(self):
         """Returns a list of all user tables in the database."""
-        tables = self.fetchall("SELECT name\
-                                FROM sqlite_master\
-                                WHERE type='table';")
+        tables = self.fetchall(
+            "SELECT name "
+            "FROM sqlite_master "
+            "WHERE type='table';"
+        )
 
         return [t[0] for t in tables if not t[0].startswith('sqlite_')];
     
