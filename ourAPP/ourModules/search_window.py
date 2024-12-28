@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-from ourModules.translations import table_to_display, table_from_display
+from ourModules.translations import from_display_value, to_display_value, table_to_display, table_from_display
 # ourModules.translations.py, επειδή το θέλει βάση το που είναι το αρχείο από την θέση της main.py
 
 class SearchWindow(tk.Toplevel):
@@ -89,12 +89,9 @@ class SearchWindow(tk.Toplevel):
         return;
 
     def initialize_window(self):
-        window_width = 1200
-        window_height = 700
-        screen_width = self.winfo_screenwidth()
-        screen_height = self.winfo_screenheight()
-        x = (screen_width // 2) - (window_width // 2)
-        y = (screen_height // 2) - (window_height // 2)
+        (window_width, window_height) = (1200, 700)
+        (screen_width, screen_height) = (self.winfo_screenwidth(), self.winfo_screenheight())
+        (x, y) = ((screen_width // 2) - (window_width // 2), (screen_height // 2) - (window_height // 2))
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         return;
@@ -137,7 +134,14 @@ class SearchWindow(tk.Toplevel):
         query = f'SELECT * FROM "{table}" WHERE {where_clause}'
         
         try:
-            rows = self.db_manager.fetchall(query, params)
+            rows_raw = self.db_manager.fetchall(query, params)
+            rows = [
+                tuple(
+                    to_display_value(col_name, r)  # Correct usage
+                    for col_name, r in zip(self.cmb_column['values'], row)
+                )
+                for row in rows_raw
+            ]
             self.display_results(rows, table)
         except Exception as e:
             messagebox.showerror("Error", f"Search failed:\n{e}")
@@ -165,20 +169,21 @@ class SearchWindow(tk.Toplevel):
         return;
 
     def select_for_editing(self):
-        # 1. Get selected row from the results_tree
+        # Get selected row from the results_tree
         selected = self.results_tree.selection()
         if not selected:
             messagebox.showwarning("No selection", "Please select a row in the search results first.")
             return;
-        
+
         # We assume only one row selected
         row_data = self.results_tree.item(selected, 'values')
+        # Δεν χρειάζεται μετατροπή, είναι ήδη σε display value το main Window!
         
-        # 2. Also get the actual table name
+        # Get the actual table name
         table_friendly = self.table_var.get()
         table = table_from_display(table_friendly)
         
-        # 3. Call a method on the parent (the main app) to select the row
+        # Call a method on the parent (the main app) to select the row
         self.master.select_row_in_table(table, row_data)
         
         self.destroy()

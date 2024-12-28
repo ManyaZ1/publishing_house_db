@@ -120,51 +120,6 @@ class PublishingHouseApp(tk.Tk):
             # Center the label
             #anvas.create_window(width//2, height//2, window=label)
             return;
-        '''def draw_emojis(event=None):
-            canvas.delete("all") # Clear existing emojis
-            (width, height) = (canvas.winfo_width(), canvas.winfo_height())
-
-            # Horizontal & Vertical spacing between emojis
-            (emoji_spacing_x, emoji_spacing_y) = (50, 40)
-
-            # Introduce padding to prevent cutting emojis at edges
-            (padding_x, padding_y) = (emoji_spacing_x // 2, emoji_spacing_y // 2)
-            
-            # Calculate number of emojis that fit horizontally and vertically
-            (columns, rows) = (width // emoji_spacing_x, height // emoji_spacing_y)
-            
-            for row in range(rows):
-                for col in range(columns):
-                    (x, y) = (col * emoji_spacing_x + padding_x, row * emoji_spacing_y + padding_y)
-                    canvas.create_text(
-                        x, y,
-                        text=emoji,
-                        font=emoji_font,
-                        fill="#d1bb93" # Emoji color (adjust as needed)
-                    )
-            
-            # Add the instruction label on top
-            instruction_text = (
-                "Welcome to the Publishing House Database!\n\n"
-                "Use the tabs above to view, insert, or edit data in each table.\n"
-                "Or click the buttons (top-left) to open the Search or Statistics windows.\n\n"
-                "Enjoy exploring your database!"
-            )
-            label_width = 800
-            label = tk.Label(
-                canvas,
-                text=instruction_text,
-                anchor="center",
-                font=('Arial', 14, 'bold'),
-                bg='#ffffff', # Solid background for readability
-                fg="#333",
-                justify='left',
-                wraplength=label_width
-            )
-            # Center the label
-            canvas.create_window(width//2, height//2, window=label)
-
-            return;'''
         
         # Initial draw
         self.after(100, draw_emoji) # Delay to allow canvas to initialize size
