@@ -1,5 +1,6 @@
 # ourModules/search_window.py
 
+from time import perf_counter
 import tkinter as tk
 from tkinter import ttk, messagebox
 from ourModules.translations import from_display_value, to_display_value, table_to_display, table_from_display
@@ -13,7 +14,7 @@ class SearchWindow(tk.Toplevel):
         self.initialize_window()
         self.db_manager = db_manager
         
-        # Container frame
+        # ------------ Container frame ------------
         container = ttk.Frame(self, padding=10)
         container.pack(expand=True, fill='both')
         
@@ -23,7 +24,7 @@ class SearchWindow(tk.Toplevel):
         controls_frame = ttk.Frame(container)
         controls_frame.pack(pady=5)
         
-        # Table selection
+        # ------------ Table selection ------------
         lbl_table = ttk.Label(controls_frame, text="Table:")
         lbl_table.grid(row=0, column=0, padx=5, pady=5)
         
@@ -42,7 +43,7 @@ class SearchWindow(tk.Toplevel):
         self.cmb_table.grid(row=0, column=1, padx=5, pady=5)
         self.cmb_table.bind("<<ComboboxSelected>>", self.on_table_selected)
         
-        # Column selection
+        # ------------ Column selection ------------
         lbl_column = ttk.Label(controls_frame, text="Column:")
         lbl_column.grid(row=1, column=0, padx=5, pady=5)
         
@@ -50,7 +51,7 @@ class SearchWindow(tk.Toplevel):
         self.cmb_column = ttk.Combobox(controls_frame, textvariable=self.column_var, values=[], state='readonly')
         self.cmb_column.grid(row=1, column=1, padx=5, pady=5)
         
-        # Operator
+        # ------------ Operator ------------
         lbl_op = ttk.Label(controls_frame, text="Operator:")
         lbl_op.grid(row=2, column=0, padx=5, pady=5)
         
@@ -59,7 +60,7 @@ class SearchWindow(tk.Toplevel):
         self.cmb_op = ttk.Combobox(controls_frame, textvariable=self.op_var, values=operators, state='readonly')
         self.cmb_op.grid(row=2, column=1, padx=5, pady=5)
         
-        # Value
+        # ------------ Value ------------
         lbl_value = ttk.Label(controls_frame, text="Value:")
         lbl_value.grid(row=3, column=0, padx=5, pady=5)
         
@@ -71,11 +72,11 @@ class SearchWindow(tk.Toplevel):
         btn_select = ttk.Button(controls_frame, text="Edit selected", command=self.select_for_editing)
         btn_select.grid(row=4, column=0, columnspan=1, pady=5)
 
-        # Search button
+        # ------------ Search button ------------
         btn_search = ttk.Button(controls_frame, text="Search", command=self.run_search)
         btn_search.grid(row=4, column=1, columnspan=1, pady=5)
         
-        # Treeview for results
+        # ------------ Treeview for results ------------
         self.tree_frame = ttk.Frame(container)
         self.tree_frame.pack(expand=True, fill='both', pady=5)
         
@@ -85,6 +86,18 @@ class SearchWindow(tk.Toplevel):
         self.results_tree = ttk.Treeview(self.tree_frame, show='headings', yscrollcommand=self.scroll_y.set)
         self.results_tree.pack(side="left", fill="both", expand=True)
         self.scroll_y.config(command=self.results_tree.yview)
+
+        # Frame for displaying search metadata
+        self.metadata_frame = ttk.Frame(container)
+        self.metadata_frame.pack(fill='x', pady=5)
+
+        # Label for elapsed time
+        self.lbl_time = ttk.Label(self.metadata_frame, text="Time Elapsed: ~ seconds")
+        self.lbl_time.pack(side='left', padx=10)
+
+        # Label for result count
+        self.lbl_count = ttk.Label(self.metadata_frame, text="Results Found: ~")
+        self.lbl_count.pack(side='left', padx=10)
 
         return;
 
@@ -134,15 +147,24 @@ class SearchWindow(tk.Toplevel):
         query = f'SELECT * FROM "{table}" WHERE {where_clause}'
         
         try:
-            rows_raw = self.db_manager.fetchall(query, params)
+            start_time =   perf_counter() # Start timing
+            rows_raw =     self.db_manager.fetchall(query, params)
+            end_time =     perf_counter() # Stop timing
+            elapsed_time = end_time - start_time
+            
+            # Convert raw rows to display-friendly rows
             rows = [
                 tuple(
-                    to_display_value(col_name, r)  # Correct usage
+                    to_display_value(col_name, r)
                     for col_name, r in zip(self.cmb_column['values'], row)
                 )
                 for row in rows_raw
             ]
-            self.display_results(rows, table)
+            self.display_results(rows, table) # Display the results in the Treeview
+            
+            # Update the elapsed time and result count labels
+            self.lbl_time.config(text=f"Time Elapsed: {elapsed_time:.4f} seconds")
+            self.lbl_count.config(text=f"Results Found: {len(rows)}")
         except Exception as e:
             messagebox.showerror("Error", f"Search failed:\n{e}")
 
