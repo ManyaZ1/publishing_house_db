@@ -1,6 +1,7 @@
 # ourModules/search_window.py
 
 from time import perf_counter
+from difflib import get_close_matches
 import tkinter as tk
 from tkinter import ttk, messagebox
 from ourModules.translations import from_display_value, to_display_value, table_to_display, table_from_display
@@ -165,6 +166,21 @@ class SearchWindow(tk.Toplevel):
             # Update the elapsed time and result count labels
             self.lbl_time.config(text=f"Time Elapsed: {elapsed_time:.4f} seconds")
             self.lbl_count.config(text=f"Results Found: {len(rows)}")
+
+            # Suggestion logic
+            if len(rows) == 0:
+                # Fetch all existing ISBNs from the database using fetchall directly
+                isbn_query = f'SELECT "{column}" FROM "{table}"'
+                all_isbns_raw = self.db_manager.fetchall(isbn_query)
+                all_isbns = [str(row[0]) for row in all_isbns_raw if row[0] is not None]
+                # str(), αλλιώς TypeError: object of type 'int' has no len()!
+                
+                # Use difflib to find close matches with a cutoff for similarity
+                suggestions = get_close_matches(value, all_isbns, n=1, cutoff=0.9)
+                if suggestions:
+                    suggested_isbn = suggestions[0]
+                    message = f"No results found for '{value}'.\n - - -> Did you mean: '{suggested_isbn}'?"
+                    messagebox.showinfo("Suggestion", message)
         except Exception as e:
             messagebox.showerror("Error", f"Search failed:\n{e}")
 
