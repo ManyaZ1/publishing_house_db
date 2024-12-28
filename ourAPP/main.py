@@ -10,7 +10,7 @@ from ourModules.table_tab import TableTab
 from ourModules.search_window import SearchWindow
 from ourModules.stats_window import StatsWindow
 
-from ourModules.translations import TAB_NAME_MAPPING
+from ourModules.translations import table_to_display
 
 class PublishingHouseApp(tk.Tk):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -61,10 +61,7 @@ class PublishingHouseApp(tk.Tk):
         self.table_frames = {} # Store the TableTab instances
         table_list = self.db_manager.get_table_list() # Get the list of tables from the DB
         for table in table_list:
-            display_name = TAB_NAME_MAPPING.get(table) # Get the friendly name from the mapping
-            if not display_name:
-                print(f"No display name mapping found for table '{table}'. Using default.")
-                display_name = table.capitalize()
+            display_name = table_to_display(table)
             frame = TableTab(self.notebook, self.db_manager, table, display_name=display_name)
             self.table_frames[table] = frame
             self.notebook.add(frame, text=display_name)

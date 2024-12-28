@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk, messagebox
-from ourModules.translations import TAB_NAME_MAPPING, TAB_NAME_MAPPING_REVERSE
+from ourModules.translations import table_to_display, table_from_display
 # ourModules.translations.py, επειδή το θέλει βάση το που είναι το αρχείο από την θέση της main.py
 
 class SearchWindow(tk.Toplevel):
@@ -31,7 +31,7 @@ class SearchWindow(tk.Toplevel):
         
         # 3. Get the actual table names from the DB, then map them to friendly names
         tables_raw = self.db_manager.get_table_list()  # actual DB table names
-        tables_display = [TAB_NAME_MAPPING.get(t, t) for t in tables_raw]  # friendly names or fallback
+        tables_display = [table_to_display(t) for t in tables_raw]
         
         self.cmb_table = ttk.Combobox(
             controls_frame,
@@ -103,11 +103,10 @@ class SearchWindow(tk.Toplevel):
         """Load column names for the chosen table."""
         # 4. Convert the friendly name from the combo box back to the actual table name
         user_friendly_name = self.table_var.get()
-        actual_table_name = TAB_NAME_MAPPING_REVERSE.get(user_friendly_name, user_friendly_name)
+        actual_table_name = table_from_display(user_friendly_name)
 
         columns_info = self.db_manager.get_table_columns(actual_table_name)
         col_names = [col[1] for col in columns_info]
-        
         self.cmb_column['values'] = col_names
         if col_names:
             self.cmb_column.current(0)
@@ -118,7 +117,7 @@ class SearchWindow(tk.Toplevel):
         """Build a SELECT query based on the user's inputs."""
         # 5. Again, convert the selected table from friendly name to actual DB name
         table_friendly = self.table_var.get()
-        table = TAB_NAME_MAPPING_REVERSE.get(table_friendly, table_friendly)
+        table = table_from_display(table_friendly)
         
         column = self.column_var.get()
         operator = self.op_var.get()
@@ -177,7 +176,7 @@ class SearchWindow(tk.Toplevel):
         
         # 2. Also get the actual table name
         table_friendly = self.table_var.get()
-        table = TAB_NAME_MAPPING_REVERSE.get(table_friendly, table_friendly)
+        table = table_from_display(table_friendly)
         
         # 3. Call a method on the parent (the main app) to select the row
         self.master.select_row_in_table(table, row_data)

@@ -4,19 +4,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
 
+from ourModules.translations import to_display_value, from_display_value, get_specialization_display_values
+
 class TableTab(ttk.Frame):
     """
     Each tab handles CRUD for a single table.
     """
-    SPECIALIZATION_MAP = {
-        1: "Translator",
-        2: "Writer",
-        3: "Graphic designer",
-        4: "Editor"
-    }
-    # Reverse mapping if you store the integer in DB
-    SPECIALIZATION_REVERSE_MAP = {v: k for k, v in SPECIALIZATION_MAP.items()}
-
     def __init__(self, parent_notebook, db_manager, table_name, display_name=None):
         super().__init__(parent_notebook)
         
@@ -93,11 +86,11 @@ class TableTab(ttk.Frame):
 
             var = tk.StringVar()
             
-            if col_name.lower() == "specialisation": # Use a Combobox
+            if col_name == "specialisation": # Use a Combobox
                 ent = ttk.Combobox(
                     self.form_frame,
                     textvariable=var,
-                    values=[self.SPECIALIZATION_MAP[i] for i in self.SPECIALIZATION_MAP],
+                    values = get_specialization_display_values(),
                     state='readonly',
                     width=28
                 )
@@ -120,15 +113,13 @@ class TableTab(ttk.Frame):
             self.tree.delete(row)
 
         rows = self.db_manager.fetchall(f'SELECT * FROM "{self.table_name}"')
-
         for r in rows:
             display_values = []
-            for col_idx, col_val in enumerate(r):
+            for col_idx, raw_val in enumerate(r):
                 col_name = self.col_names[col_idx]
-                if col_name.lower() == "specialisation" and col_val is not None:
-                    # Convert integer to display string
-                    col_val = self.SPECIALIZATION_MAP.get(col_val, col_val)
-                display_values.append(col_val)
+                # Transform the raw_val to a display-friendly value
+                display_val = to_display_value(col_name, raw_val)
+                display_values.append(display_val)
             
             self.tree.insert("", "end", values=display_values)
 
@@ -139,10 +130,9 @@ class TableTab(ttk.Frame):
         selected_item = self.tree.selection()
         if not selected_item:
             return;
-        row_data = self.tree.item(selected_item, 'values')
         
-        # Fill in the form
-        for col_name, value in zip(self.col_names, row_data):
+        row_data = self.tree.item(selected_item, 'values')
+        for col_name, value in zip(self.col_names, row_data): # Fill in the form
             self.entry_vars[col_name].set(value)
         
         # Switch to "Update" mode
@@ -155,12 +145,9 @@ class TableTab(ttk.Frame):
         data = []
         for col in self.col_names:
             val = self.entry_vars[col].get().strip()
-
-            if col.lower() == "specialisation": # Convert from "Translator" → 1, ...
-                val = self.SPECIALIZATION_REVERSE_MAP.get(val, None)
-            else: # If empty, store None
-                val = val if val != '' else None
-
+            val = from_display_value(col, val) # Convert display value back to raw value
+            if val == '':  # if user typed empty string, store None
+                val = None
             data.append(val)
         
         placeholders = ", ".join(["?" for _ in data])
@@ -187,14 +174,12 @@ class TableTab(ttk.Frame):
             return;
         
         old_row_data = self.tree.item(selected_item, 'values')
-        
         new_data = []
         for col_name in self.col_names:
             val = self.entry_vars[col_name].get().strip()
-            if col_name.lower() == "specialisation":
-                val = self.SPECIALIZATION_REVERSE_MAP.get(val, None)
-            else:
-                val = val if val != '' else None
+            val = from_display_value(col_name, val)
+            if val == '':
+                val = None
             new_data.append(val)
         
         set_clause = ", ".join([f'"{c}"=?' for c in self.col_names])
@@ -242,14 +227,12 @@ class TableTab(ttk.Frame):
             return;
         
         row_data = self.tree.item(selected_item, 'values')
-        
         pk_cols = [col[1] for col in self.columns_info if col[5] != 0]
         if not pk_cols:
             pk_cols = self.col_names
         
         where_clause_parts = []
         where_params = []
-        
         for idx, col_name in enumerate(self.col_names):
             if col_name in pk_cols:
                 where_clause_parts.append(f'"{col_name}"=?')
