@@ -95,6 +95,15 @@ class TableTab(ttk.Frame):
                     width=28
                 )
                 ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
+            elif col_name == "comments": # Use a Combobox from 1 -> 5
+                ent = ttk.Combobox(
+                    self.form_frame,
+                    textvariable=var,
+                    values = [str(i) for i in range(1, 6)],
+                    state='readonly',
+                    width=28
+                )
+                ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
             else: # Normal Entry
                 ent = ttk.Entry(self.form_frame, textvariable=var, width=30)
                 ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')

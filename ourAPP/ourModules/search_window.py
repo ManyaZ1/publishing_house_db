@@ -162,6 +162,8 @@ class SearchWindow(tk.Toplevel):
         for c in col_names:
             self.results_tree.heading(c, text=c)
             self.results_tree.column(c, width=120, anchor='center')
+            if c == "comments":
+                self.results_tree.column(c, width=120, anchor='w') # w: Align all data in your Treeview to the left! ⭐
         
         for row in rows:
             self.results_tree.insert("", "end", values=row)

@@ -24,6 +24,16 @@ SPECIALIZATION_MAP = {
 
 SPECIALIZATION_REVERSE_MAP = {v: k for k, v in SPECIALIZATION_MAP.items()}
 
+PARTNER_COMMENT_MAP = {
+    1: "⭐",
+    2: "⭐⭐",
+    3: "⭐⭐⭐",
+    4: "⭐⭐⭐⭐",
+    5: "⭐⭐⭐⭐⭐"
+}
+
+PARTNER_COMMENT_REVERSE_MAP = {v: k for k, v in PARTNER_COMMENT_MAP.items()}
+
 # Functions for translating between raw and display values
 def to_display_value(col_name: str, raw_value):
     """
@@ -32,6 +42,8 @@ def to_display_value(col_name: str, raw_value):
     """
     if col_name == "specialisation" and raw_value is not None:
         return SPECIALIZATION_MAP.get(raw_value, raw_value);
+    if col_name == "comments" and raw_value is not None:
+        return PARTNER_COMMENT_MAP.get(raw_value, raw_value);
     
     return raw_value;
 
@@ -41,6 +53,8 @@ def from_display_value(col_name: str, display_value):
     """
     if col_name == "specialisation" and display_value is not None:
         return SPECIALIZATION_REVERSE_MAP.get(display_value, display_value);
+    if col_name == "comments" and display_value is not None:
+        return PARTNER_COMMENT_REVERSE_MAP.get(display_value, display_value);
 
     return display_value;
 
