@@ -291,6 +291,8 @@ class TableTab(ttk.Frame):
     
     def delete_selected(self):
         """Delete the selected row from the DB."""
+        #self.conn.execute("PRAGMA foreign_keys = ON")
+
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "No row selected to delete.")
