@@ -1,8 +1,9 @@
 CREATE TABLE IF NOT EXISTS "PARTNER" (
 	"name" string,
 	"Tax_Id" integer,
-	"specialisation" integer,
-	"comments" string,
+	"specialisation" integer ,
+	"comments" integer,
+	CONSTRAINT "check_specialisation" CHECK ("specialisation" BETWEEN 1 AND 4),
 	PRIMARY KEY ("Tax_Id")
 );
 
@@ -14,7 +15,7 @@ CREATE TABLE IF NOT EXISTS "CONTRACT" (
 	"description" string,
 	"Partner_Tax_Id" integer,
 	"Publication-isbn" integer,
-	PRIMARY KEY ("id"),
+	PRIMARY KEY ("id", "Partner_Tax_Id", "Publication-isbn"),
 	FOREIGN KEY ("Partner_Tax_Id") REFERENCES "PARTNER" ("Tax_Id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT,
@@ -50,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "PUBLICATION" (
 	"price" float,
 	"stock" integer,
 	"genre-id" integer,
-	PRIMARY KEY ("isbn"),
+	PRIMARY KEY ("isbn", "genre-id"),
 	FOREIGN KEY ("genre-id") REFERENCES "GENRE" ("id")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
