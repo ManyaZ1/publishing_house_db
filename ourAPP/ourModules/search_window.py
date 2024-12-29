@@ -11,7 +11,7 @@ class SearchWindow(tk.Toplevel):
     def __init__(self, parent, db_manager):
         super().__init__(parent)
         
-        self.title("Search Database")
+        self.title("🔎")
         self.initialize_window()
         self.db_manager = db_manager
         
@@ -109,10 +109,18 @@ class SearchWindow(tk.Toplevel):
         self.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         return;
+
+    def bring_to_front(self):
+        """Bring the window to the front, set focus, and ensure it's visible."""
+        self.focus_set()   # Set focus to the window
+        self.deiconify()   # Restore the window if it was minimized or hidden
+        self.lift()        # Bring the window to the top of the window stack
+
+        return;
     
     def on_table_selected(self, event):
         """Load column names for the chosen table."""
-        # 4. Convert the friendly name from the combo box back to the actual table name
+        # Convert the friendly name from the combo box back to the actual table name
         user_friendly_name = self.table_var.get()
         actual_table_name = table_from_display(user_friendly_name)
 
@@ -124,18 +132,21 @@ class SearchWindow(tk.Toplevel):
         
         return;
     
-    def run_search(self):
+    def run_search(self, suggested_value=None):
         """Build a SELECT query based on the user's inputs."""
-        # 5. Again, convert the selected table from friendly name to actual DB name
+        # Convert the selected table from friendly name to actual DB name
         table_friendly = self.table_var.get()
         table = table_from_display(table_friendly)
         
         column = self.column_var.get()
         operator = self.op_var.get()
-        value = self.value_var.get().strip()
+        value = suggested_value if suggested_value is not None \
+            else self.value_var.get().strip()
         
         if not table or not column:
-            messagebox.showwarning("Warning", "Please select a table and column.")
+            messagebox.showwarning("Warning", "Please select a table and column.", parent=self)
+            self.bring_to_front() # After a message box is dismissed
+
             return;
         
         if operator.upper() == "LIKE":
@@ -168,21 +179,27 @@ class SearchWindow(tk.Toplevel):
             self.lbl_count.config(text=f"Results Found: {len(rows)}")
 
             # Suggestion logic
-            if len(rows) == 0:
-                # Fetch all existing ISBNs from the database using fetchall directly
-                isbn_query = f'SELECT "{column}" FROM "{table}"'
-                all_isbns_raw = self.db_manager.fetchall(isbn_query)
-                all_isbns = [str(row[0]) for row in all_isbns_raw if row[0] is not None]
+            if len(rows) == 0 and suggested_value is None:
+                # Fetch all existing items from the database using fetchall directly
+                get_everything_query = f'SELECT "{column}" FROM "{table}"'
+                everything_raw = self.db_manager.fetchall(get_everything_query)
+                everything = [str(row[0]) for row in everything_raw if row[0] is not None]
                 # str(), αλλιώς TypeError: object of type 'int' has no len()!
                 
                 # Use difflib to find close matches with a cutoff for similarity
-                suggestions = get_close_matches(value, all_isbns, n=1, cutoff=0.8)
+                suggestions = get_close_matches(value, everything, n=1, cutoff=0.8)
                 if suggestions:
-                    suggested_isbn = suggestions[0]
-                    message = f"No results found for '{value}'.\n - - -> Did you mean: '{suggested_isbn}'?"
-                    messagebox.showinfo("Suggestion", message)
+                    suggested = suggestions[0]
+                    message = f"No results found for '{value}'.\n - - -> Did you mean: '{suggested}'?"
+                    response = messagebox.askyesno("Suggestion", message, parent=self)
+                    self.bring_to_front() # After a message box is dismissed
+                    if response:
+                        # If user agrees, perform the search with the suggested value
+                        self.value_var.set(suggested)
+                        self.run_search(suggested_value=suggested)
         except Exception as e:
-            messagebox.showerror("Error", f"Search failed:\n{e}")
+            messagebox.showerror("Error", f"Search failed:\n{e}", parent=self)
+            self.bring_to_front() # After a message box is dismissed
 
         return;
     
@@ -212,7 +229,9 @@ class SearchWindow(tk.Toplevel):
         # Get selected row from the results_tree
         selected = self.results_tree.selection()
         if not selected:
-            messagebox.showwarning("No selection", "Please select a row in the search results first.")
+            messagebox.showwarning("No selection", "Please select a row in the search results first.", parent=self)
+            self.bring_to_front() # After a message box is dismissed
+
             return;
 
         # We assume only one row selected
