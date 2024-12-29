@@ -613,9 +613,9 @@ class PublishingDatabaseManager:
         self._create_database()
         self._populate_database()
 
-        print("All done! Closing in 5 seconds...")
+        #print("All done! Closing in 5 seconds...")
 
-        sleep(5)
+        #sleep(5)
 
         return;
 
