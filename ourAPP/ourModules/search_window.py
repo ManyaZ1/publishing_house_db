@@ -176,7 +176,7 @@ class SearchWindow(tk.Toplevel):
                 # str(), αλλιώς TypeError: object of type 'int' has no len()!
                 
                 # Use difflib to find close matches with a cutoff for similarity
-                suggestions = get_close_matches(value, all_isbns, n=1, cutoff=0.9)
+                suggestions = get_close_matches(value, all_isbns, n=1, cutoff=0.8)
                 if suggestions:
                     suggested_isbn = suggestions[0]
                     message = f"No results found for '{value}'.\n - - -> Did you mean: '{suggested_isbn}'?"
