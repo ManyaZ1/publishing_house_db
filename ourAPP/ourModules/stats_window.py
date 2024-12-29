@@ -64,7 +64,7 @@ class StatsWindow(tk.Toplevel):
             btn_frame, text="Accounts Payable to Printing House",
             command=lambda:self.plot_chart(
                 '''
-                SELECT strftime('%Y', "order date") AS Year, SUM("cost") AS Total_Payable
+                SELECT strftime('%Y', "order date") AS Year, ROUND(SUM("cost"), 2) AS Total_Payable
                 FROM "order_printing_house"
                 GROUP BY Year
                 ORDER BY Year
