@@ -3,7 +3,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
-
+#from main import *
 from ourModules.translations import to_display_value, from_display_value, get_specialization_display_values
 
 class TableTab(ttk.Frame):
@@ -69,12 +69,77 @@ class TableTab(ttk.Frame):
         self.unselect_btn.pack(side="left", padx=5)
 
         return;
-    
     def create_form_section(self):
         """A frame with Entry widgets for each column (for insert/edit)."""
+        self.fields_color="#d6fffd" #name,tax_id labels colors
+        self.back_color="#d8d8d6" #background color
+
+        
+        # Use tk.LabelFrame instead of ttk.LabelFrame
+        self.form_frame = tk.LabelFrame(
+            self, 
+            text=f"{self.display_name} - Insert / Edit Record",
+            bg=  self.back_color ,        #"#f4f4f9",#   "#d6fffd" ,   #"#d9e8f5",  # Set background color
+            fg="#333",  # Set text color
+            font=("Arial", 10, "bold"),  # Optional font customization
+            padx=10, 
+            pady=10
+        )
+        self.form_frame.pack(side="bottom", fill="x", padx=5, pady=5)
+
+        self.entry_vars = {}
+        
+        # Create a row of labels + entries for each column  #"#d6fffd"
+        for index, colinfo in enumerate(self.columns_info):
+            col_name = colinfo[1]
+
+            lbl = tk.Label(self.form_frame, text=col_name, width=20, bg=self.fields_color, fg="#333")
+            lbl.grid(row=index, column=0, padx=5, pady=2, sticky='w')
+
+            var = tk.StringVar()
+
+            if col_name == "specialisation":  # Use a Combobox
+                ent = ttk.Combobox(
+                    self.form_frame,
+                    textvariable=var,
+                    values=get_specialization_display_values(),
+                    state='readonly',
+                    width=28
+                )
+            elif col_name == "comments":  # Use a Combobox from 1 -> 5
+                ent = ttk.Combobox(
+                    self.form_frame,
+                    textvariable=var,
+                    values=[str(i) for i in range(1, 6)],
+                    state='readonly',
+                    width=28
+                )
+            else:  # Normal Entry
+                ent = tk.Entry(self.form_frame, textvariable=var, width=30, bg="white")
+
+            ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
+            self.entry_vars[col_name] = var
+
+        # Insert / Update button
+        self.action_btn = ttk.Button(self.form_frame, text="Insert", command=self.insert_record)
+        self.action_btn.grid(row=len(self.columns_info), column=0, columnspan=2, pady=10)
+
+    def create_form_section_og(self):
+        """A frame with Entry widgets for each column (for insert/edit)."""
+        # Apply the style in your main code (usually once in your main application)
+        # style = ttk.Style()
+        # style.theme_use('clam') 
+        # style.configure("Custom.TLabelFrame", background="#d9e8f5", foreground="#333")  # Background and text color
+        # style.configure("Custom.TLabelFrame.Label", background="#d9e8f5", font=("Arial", 10, "bold"))
+
+        # # Update your LabelFrame
+        # self.form_frame = ttk.LabelFrame(self, text=f"{self.display_name} - Insert / Edit Record", padding=10, style="Custom.TLabelFrame")
+        # self.form_frame.pack(side="bottom", fill="x", padx=5, pady=5)
+
         self.form_frame = ttk.LabelFrame(self, text=f"{self.display_name} - Insert / Edit Record", padding=10)
         self.form_frame.pack(side="bottom", fill="x", padx=5, pady=5)
-        
+        #self.form_frame = ttk.LabelFrame(self, text="Insert / Edit Record", padding=10, style="Custom.TLabelFrame")
+
         self.entry_vars = {}
         
         # Create a row of labels+entries for each column

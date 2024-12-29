@@ -22,19 +22,24 @@ class PublishingHouseApp(tk.Tk):
         
         self.title("Publishing House DB - GUI")
         self.state('zoomed') # Maximizes the window
-        
+        self.canvas_color="#c4fefb" # Background color for the canvas og:"#f0d9b5"
+        self.treeview_bg="#d6fffd" # Background color for the treeview og:"#fffaf0"
         # Style / Colors
         style = ttk.Style(self)
         style.theme_use('clam')
-        style.configure('TFrame', background="#f0d9b5") # main background
-        style.configure('TLabel', background="#f0d9b5", foreground="#333")
-        style.configure('TNotebook', background="#f0d9b5")
+        style.configure('TFrame', background=self.canvas_color) # main background
+        style.configure('TLabel', background=self.canvas_color, foreground="#333")
+        style.configure('TNotebook', background=self.canvas_color)
         style.configure('TNotebook.Tab', background="#d1bb93")
         style.configure('TButton', background="#b58863", foreground="#fff", font=('Arial', 10, 'bold'))
         style.map('TButton', background=[('active', '#a57958')])
 
-        style.configure('Treeview', background="#fffaf0", fieldbackground="#fffaf0", foreground="black")
+        style.configure('Treeview', background=self.treeview_bg, fieldbackground=self.treeview_bg, foreground="black") # Treeview background color
         style.configure('Treeview.Heading', background="#b58863", foreground="#fff", font=('Arial', 10, 'bold'))
+        #style.configure("TLabelFrame", background="#fffff", foreground="#333")  # Background and text color
+        #style.configure("TLabelFrame.Label", background="#f4f4f9", foreground="#333", font=("Arial", 10, "bold"))
+        #style.configure("Custom.TLabelFrame", background="#d9e8f5", foreground="#333")
+        #style.configure("Custom.TLabelFrame.Label", background="#d9e8f5", foreground="#333", font=("Arial", 10, "bold"))
 
         # Database
         self.db_manager = DatabaseManager(db_path)
@@ -78,7 +83,7 @@ class PublishingHouseApp(tk.Tk):
         home_frame = ttk.Frame(self.notebook)
         self.notebook.add(home_frame, text="Home")
         
-        canvas = tk.Canvas(home_frame, bg="#f0d9b5", highlightthickness=0)
+        canvas = tk.Canvas(home_frame, bg=self.canvas_color, highlightthickness=0)
         canvas.pack(fill='both', expand=True)
         
         emoji = "📖 📖"#"📖"
@@ -110,7 +115,7 @@ class PublishingHouseApp(tk.Tk):
                 #height= height // 10,
                 #width= canvas.winfo_width() // 20,
                 font=('Calibri', 14, 'bold'),
-                bg="#f0d9b5",#  '#e8ddc9',           #'#ffffff', # Solid background for readability
+                bg=self.canvas_color,    #     "#f0d9b5",  #  '#e8ddc9',           #'#ffffff', # Solid background for readability
                 fg='#5C4033',#"#333",
                 justify='center',
                 pady=10,
@@ -145,7 +150,7 @@ class PublishingHouseApp(tk.Tk):
 
         return;
 
-    def select_row_in_table(self, table_name, row_data):
+    def select_row_in_table(self, table_name, row_data): #
         # table_name should exactly match a key in self.table_frames
         if table_name not in self.table_frames:
             messagebox.showerror("Error", f"Table '{table_name}' not found in table_frames!")
