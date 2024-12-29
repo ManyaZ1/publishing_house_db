@@ -148,6 +148,8 @@ class PublishingDatabaseManager:
             schema_content = schema_file.read()
 
         connection = sqlite3.connect(self.db_path)
+        # Enable foreign key support
+        connection.execute("PRAGMA foreign_keys = ON;")
         cursor = connection.cursor()
         cursor.executescript(schema_content)
         connection.commit()
@@ -164,6 +166,7 @@ class PublishingDatabaseManager:
         using the internal state.
         """
         connection = sqlite3.connect(self.db_path)
+        connection.execute("PRAGMA foreign_keys = ON;")
         cursor = connection.cursor()
 
         # ------------------- PARTNER -------------------
@@ -247,7 +250,7 @@ class PublishingDatabaseManager:
         printing_orders = self._generate_printing_orders(cursor)
         cursor.executemany(
             'INSERT INTO "order_printing_house" '
-            '("Printing-id", "Publication-isbn", "order date", "delivery date", "quntity", "cost") '
+            '("Printing-id", "Publication-isbn", "order date", "delivery date", "quantity", "cost") '
             'VALUES (?, ?, ?, ?, ?, ?)', printing_orders
         )
 
@@ -620,5 +623,9 @@ class PublishingDatabaseManager:
         return;
 
 if __name__ == "__main__":
+    #import sqlite3
+
+# Get SQLite version
+    print("SQLite version:", sqlite3.sqlite_version)
     manager = PublishingDatabaseManager(scale_factor=3)
     manager.run()
