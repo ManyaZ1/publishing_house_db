@@ -259,7 +259,7 @@ class PublishingDatabaseManager:
         cursor.executemany(
             'INSERT INTO "contributes" '
             '("Partner_TaxId", "Publication-isbn", "estimated_completion_date", '
-            '"start_date", "completion_date", "payment") '
+            '"start_date", "completion_date", "payment date") '
             'VALUES (?, ?, ?, ?, ?, ?)', contributes_data
         )
 
@@ -511,7 +511,14 @@ class PublishingDatabaseManager:
             start_date = self._random_date(cstart, completion_date)
             eta_date = self._random_date(start_date, completion_date)
 
-            paid = random.choice([0, 1])
+            #paid = random.choice([0, 1])
+            #payment = date either null or larger than completion_date
+
+            if random.choice([True, False, False]):  # 1/3 chance for NULL
+                payment_date = None
+            else:
+                payment_date = completion_date + timedelta(days=random.randint(0, 30))
+                payment_date=payment_date.strftime("%Y-%m-%d")
 
             contributes_data.append((
                 partner_tax_id,
@@ -519,7 +526,8 @@ class PublishingDatabaseManager:
                 eta_date.strftime("%Y-%m-%d"),
                 start_date.strftime("%Y-%m-%d"),
                 completion_date.strftime("%Y-%m-%d"),
-                paid
+                payment_date # None or a date
+                #paid
             ))
 
         return contributes_data;
