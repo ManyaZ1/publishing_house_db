@@ -114,7 +114,7 @@ class StatsWindow(tk.Toplevel):
         return;
 
 
-    def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
+
     def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
         """
         A universal chart plotting function.
