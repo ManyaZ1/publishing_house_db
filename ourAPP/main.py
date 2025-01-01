@@ -11,6 +11,7 @@ from ourModules.search_window import SearchWindow
 from ourModules.stats_window import StatsWindow
 
 from ourModules.translations import table_to_display
+from ourModules.animated_window import AnimatedWindow
 
 class PublishingHouseApp(tk.Tk):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -135,11 +136,19 @@ class PublishingHouseApp(tk.Tk):
         return;
 
     def open_search_window(self):
-        SearchWindow(self, self.db_manager)
+        temp = SearchWindow(self, self.db_manager)
+        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 700), duration=400)
+        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        animator.open_animation()
+
         return;
 
     def open_stats_window(self):
-        StatsWindow(self, self.db_manager)
+        temp = StatsWindow(self, self.db_manager)
+        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 700), duration=400)
+        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        animator.open_animation()
+
         return;
 
     def on_closing(self):
