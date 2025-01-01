@@ -12,7 +12,6 @@ class SearchWindow(tk.Toplevel):
         super().__init__(parent)
         
         self.title("🔎")
-        self.initialize_window()
         self.db_manager = db_manager
         
         # ------------ Container frame ------------

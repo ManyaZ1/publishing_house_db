@@ -136,18 +136,18 @@ class PublishingHouseApp(tk.Tk):
         return;
 
     def open_search_window(self):
-        SearchWindow(self, self.db_manager)
-        #animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
-        #temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
-        #animator.open_animation()
+        temp = SearchWindow(self, self.db_manager)
+        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
+        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        animator.open_animation()
 
         return;
 
     def open_stats_window(self):
-        StatsWindow(self, self.db_manager)
-        #animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
-        #temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
-        #animator.open_animation()
+        temp = StatsWindow(self, self.db_manager)
+        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
+        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        animator.open_animation()
 
         return;
 
