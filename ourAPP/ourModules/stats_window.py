@@ -94,7 +94,7 @@ class StatsWindow(tk.Toplevel):
 
         return;
 
-    def plot_chart(self, sql_query, x_lable_name, y_label_name, title_name, chart_color):
+    def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
         """
         A universal chart plotting function.
         """
@@ -109,7 +109,7 @@ class StatsWindow(tk.Toplevel):
 
         fig, ax = plt.subplots(figsize=(6,4))
         ax.bar(x_list, y_list, color=chart_color)
-        ax.set_xlabel(x_lable_name, fontsize=12)
+        ax.set_xlabel(x_label_name, fontsize=12)
         ax.set_ylabel(y_label_name, fontsize=12)
         ax.set_title(title_name, fontsize=14)
         plt.xticks(rotation=45, ha="right")
