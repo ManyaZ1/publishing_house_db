@@ -14,10 +14,6 @@ from ourModules.translations import table_to_display
 from ourModules.animated_window import AnimatedWindow
 
 class PublishingHouseApp(tk.Tk):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    new_path = os.path.dirname(script_dir)
-    db_path = os.path.join(new_path, "publishing_house.db")
-
     def __init__(self, db_path):
         super().__init__()
         
@@ -68,12 +64,25 @@ class PublishingHouseApp(tk.Tk):
         table_list = self.db_manager.get_table_list() # Get the list of tables from the DB
         for table in table_list:
             display_name = table_to_display(table)
-            frame = TableTab(self.notebook, self.db_manager, table, display_name=display_name)
+            frame = TableTab(
+                parent_notebook = self.notebook,
+                db_manager = self.db_manager,
+                table_name = table,
+                main_app = self,
+                display_name = display_name
+            )
             self.table_frames[table] = frame
             self.notebook.add(frame, text=display_name)
 
         # Clean up on close
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        return;
+
+    def refresh_all_tabs(self):
+        """Refresh the TreeView in all TableTab instances."""
+        for tab in self.table_frames.values():
+            tab.populate_treeview()
 
         return;
 
