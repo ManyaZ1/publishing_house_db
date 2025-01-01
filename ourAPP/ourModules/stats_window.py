@@ -63,7 +63,7 @@ class StatsWindow(tk.Toplevel):
             btn_frame, text="Accounts Payable to Printing House",
             command=lambda:self.plot_chart(
                 '''
-                SELECT strftime('%Y', "order date") AS Year, SUM("cost") AS Total_Payable
+                SELECT strftime('%Y', "order date") AS Year, ROUND(SUM("cost"), 2) AS Total_Payable
                 FROM "order_printing_house"
                 GROUP BY Year
                 ORDER BY Year
@@ -87,6 +87,23 @@ class StatsWindow(tk.Toplevel):
             )
         )
         btn_book_sales.pack(side="left", padx=5)
+
+        # Show Each Author's Sales
+        btn_author_sales = ttk.Button(
+            btn_frame, text="Author Sales",
+            command=lambda:self.plot_chart(
+                f'''
+                SELECT "PARTNER"."name", SUM("client_orders"."quantity") AS Total_Sales
+                FROM ("PARTNER" JOIN "contributes" ON "contributes"."Partner_TaxId" = "PARTNER"."Tax_Id")
+                                 JOIN "client_orders" ON "client_orders"."Publication-isbn" = "contributes"."Publication-isbn"
+                WHERE "PARTNER"."specialisation" = {SPECIALIZATION_REVERSE_MAP["Writer"]}
+                GROUP BY "PARTNER"."Tax_Id"
+                ORDER BY Total_Sales DESC;
+                ''',
+                'Author Name', 'Total Sales', 'Author Sales by (Client) Quantity Orders', 'red'
+            )
+        )
+        btn_author_sales.pack(side="left", padx=5)
         
         # A frame to hold the matplotlib figure
         self.plot_frame = ttk.Frame(container)
@@ -96,7 +113,8 @@ class StatsWindow(tk.Toplevel):
 
         return;
 
-    def plot_chart(self, sql_query, x_lable_name, y_label_name, title_name, chart_color):
+
+    def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
         """
         A universal chart plotting function.
         """
@@ -137,7 +155,7 @@ class StatsWindow(tk.Toplevel):
         # ----------------- Plot the data in a bar chart -----------------
         fig, ax = plt.subplots(figsize=(6,4))
         ax.bar(x_list, y_list, color=chart_color)
-        ax.set_xlabel(x_lable_name, fontsize=12)
+        ax.set_xlabel(x_label_name, fontsize=12)
         ax.set_ylabel(y_label_name, fontsize=12)
         ax.set_title(title_name, fontsize=14)
         plt.xticks(rotation=45, ha="right")
