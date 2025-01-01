@@ -17,7 +17,6 @@ class StatsWindow(tk.Toplevel):
         super().__init__(parent)
         
         self.title("Database Statistics")
-        self.initialize_window()
         self.db_manager = db_manager
         
         # Main container
@@ -114,14 +113,6 @@ class StatsWindow(tk.Toplevel):
 
         return;
 
-    def initialize_window(self):
-        (window_width, window_height) = (1200, 700)
-        (screen_width, screen_height) = (self.winfo_screenwidth(), self.winfo_screenheight())
-        (x, y) = ((screen_width // 2) - (window_width // 2), (screen_height // 2) - (window_height // 2))
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-        return;
-
     def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
         """
         A universal chart plotting function.
@@ -175,11 +166,18 @@ class StatsWindow(tk.Toplevel):
 
     def show_plot(self, fig):
         """Embed the Matplotlib figure in the plot_frame."""
-        for child in self.plot_frame.winfo_children():
-            child.destroy()
+        if self.canvas:
+            self.canvas.get_tk_widget().destroy()
         
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(expand=True, fill='both')
+
+        # Force the window to resize slightly to trigger re-layout!
+        # This is a workaround to avoid the canvas not fully showing the plot...
+        (current_width, current_height) = (self.winfo_width(), self.winfo_height())
+        self.geometry(f"{current_width + 1}x{current_height + 1}")
+        # Add a small delay before resetting the size
+        self.after(10, lambda: self.geometry(f"{current_width}x{current_height}"))
 
         return;
