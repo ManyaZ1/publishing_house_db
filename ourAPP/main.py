@@ -22,8 +22,8 @@ class PublishingHouseApp(tk.Tk):
         
         self.title("Publishing House DB - GUI")
         self.state('zoomed') # Maximizes the window
-        self.canvas_color="#c4fefb" # Background color for the canvas og:"#f0d9b5"
-        self.treeview_bg="#d6fffd" # Background color for the treeview og:"#fffaf0"
+        self.canvas_color="#f0d9b5"#"#aeb6bf"#"#f0d9b5" # Background color for the canvas og:"#f0d9b5" tirquiose #c4fefb vissini #d98880
+        self.treeview_bg="#fffaf0"#"#e7c88c" # Background color for the treeview og:"#fffaf0" light tirquiose #d6fffd"
         # Style / Colors
         style = ttk.Style(self)
         style.theme_use('clam')

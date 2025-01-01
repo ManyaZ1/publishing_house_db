@@ -1,3 +1,5 @@
+--Επιβεβαιώνουμε ότι PRAGMA foreign_keys είναι 1 στο SQLite3 για να ενεργοποιήσουμε τον έλεγχο των εξωτερικών κλειδιών
+
 CREATE TABLE IF NOT EXISTS "PARTNER" (
 	"name" string,
 	"Tax_Id" integer,
@@ -6,6 +8,12 @@ CREATE TABLE IF NOT EXISTS "PARTNER" (
 	CONSTRAINT "check_specialisation" CHECK ("specialisation" BETWEEN 1 AND 4), --Έλεγχος για το πεδίο specialisation
 	PRIMARY KEY ("Tax_Id")
 );
+
+-- δεν διαγράφουμε ποτέ partner, γιατί πρέπει να κραταμε αρχειο με ολα τα συμβολαια
+-- οποτε χρειαζομαστε και τα κλειδια των συνεργατων
+-- επομένως χρησιμοποιούμε το RESTRICT στο ON DELETE
+-- Επίσης, δεν επιτρέπεται η αλλαγή του Tax_Id του PARTNER
+-- οπότε χρησιμοποιούμε το RESTRICT στο ON UPDATE
 
 CREATE TABLE IF NOT EXISTS "CONTRACT" ( 
 	"payment" float,
@@ -18,10 +26,10 @@ CREATE TABLE IF NOT EXISTS "CONTRACT" (
 	PRIMARY KEY ("id"),
 	FOREIGN KEY ("Partner_Tax_Id") REFERENCES "PARTNER" ("Tax_Id") --referential integrity constraint
             ON UPDATE RESTRICT --δεν επιτρεπεται αλλαγη του Tax_Id του PARTNER
-            ON DELETE RESTRICT,--κρατάμε συμβόλαιο ακόμα και αν διαγραφεί ο συνεργάτης
+            ON DELETE RESTRICT,--δεν επιτρέπεται διαγραφή Tax_Id
 	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn") --referential integrity constraint
             ON UPDATE RESTRICT --δεν επιτρεπεται αλλαγη του isbn του PUBLICATION
-            ON DELETE RESTRICT --κρατάμε συμβόλαιο ακόμα και αν διαγραφεί το βιβλίο
+            ON DELETE RESTRICT -- δεν επιτρέπεται διαγραφή isbn
 );
 
 CREATE TABLE IF NOT EXISTS "CLIENT" (
@@ -67,7 +75,7 @@ CREATE TABLE IF NOT EXISTS "client_orders" (
 	PRIMARY KEY ("Client_Tax_ID", "Publication-isbn"),
 	FOREIGN KEY ("Client_Tax_ID") REFERENCES "CLIENT" ("Tax_ID")
             ON UPDATE RESTRICT
-            ON DELETE RESTRICT,
+            ON DELETE RESTRICT, -- Δεν θέλουμε να διαγράψουμε έναν πελάτη αν έχει κάνει παραγγελία, ωστε να διατηρήσουμε των συναλλαγών
 	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")
             ON UPDATE RESTRICT
             ON DELETE RESTRICT
