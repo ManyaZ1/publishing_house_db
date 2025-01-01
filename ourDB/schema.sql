@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS "contributes" (
 	"estimated_completion_date" date,
 	"start_date" date,
 	"completion_date" date,
-	"payment" boolean,
+	"payment_date" date,
 	PRIMARY KEY ("Partner_TaxId", "Publication-isbn"),
 	FOREIGN KEY ("Partner_TaxId") REFERENCES "PARTNER" ("Tax_Id") --referential integrity constraint
             ON UPDATE RESTRICT --Δεν θέλουμε να αλλάξουμε το Tax_Id του PARTNER οπότε το αποτρέπουμε με το RESTRICT
