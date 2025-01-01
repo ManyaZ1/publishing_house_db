@@ -12,7 +12,6 @@ class SearchWindow(tk.Toplevel):
         super().__init__(parent)
         
         self.title("🔎")
-        self.initialize_window()
         self.db_manager = db_manager
         
         # ------------ Container frame ------------
@@ -99,14 +98,6 @@ class SearchWindow(tk.Toplevel):
         # Label for result count
         self.lbl_count = ttk.Label(self.metadata_frame, text="Results Found: ~")
         self.lbl_count.pack(side='left', padx=10)
-
-        return;
-
-    def initialize_window(self):
-        (window_width, window_height) = (1200, 700)
-        (screen_width, screen_height) = (self.winfo_screenwidth(), self.winfo_screenheight())
-        (x, y) = ((screen_width // 2) - (window_width // 2), (screen_height // 2) - (window_height // 2))
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         return;
 

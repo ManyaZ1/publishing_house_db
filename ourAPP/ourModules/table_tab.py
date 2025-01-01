@@ -71,7 +71,7 @@ class TableTab(ttk.Frame):
         return;
     def create_form_section(self):
         """A frame with Entry widgets for each column (for insert/edit)."""
-        self.fields_color="#d6fffd" #name,tax_id labels colors
+        self.fields_color= "#fffaf0"# tirquiose "#d6fffd" #name,tax_id labels colors
         self.back_color="#d8d8d6" #background color
 
         
@@ -291,6 +291,8 @@ class TableTab(ttk.Frame):
     
     def delete_selected(self):
         """Delete the selected row from the DB."""
+        #self.conn.execute("PRAGMA foreign_keys = ON")
+
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showwarning("Warning", "No row selected to delete.")

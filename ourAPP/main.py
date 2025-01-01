@@ -11,6 +11,7 @@ from ourModules.search_window import SearchWindow
 from ourModules.stats_window import StatsWindow
 
 from ourModules.translations import table_to_display
+from ourModules.animated_window import AnimatedWindow
 
 class PublishingHouseApp(tk.Tk):
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -22,8 +23,8 @@ class PublishingHouseApp(tk.Tk):
         
         self.title("Publishing House DB - GUI")
         self.state('zoomed') # Maximizes the window
-        self.canvas_color="#c4fefb" # Background color for the canvas og:"#f0d9b5"
-        self.treeview_bg="#d6fffd" # Background color for the treeview og:"#fffaf0"
+        self.canvas_color="#f0d9b5"#"#aeb6bf"#"#f0d9b5" # Background color for the canvas og:"#f0d9b5" tirquiose #c4fefb vissini #d98880
+        self.treeview_bg="#fffaf0"#"#e7c88c" # Background color for the treeview og:"#fffaf0" light tirquiose #d6fffd"
         # Style / Colors
         style = ttk.Style(self)
         style.theme_use('clam')
@@ -135,11 +136,19 @@ class PublishingHouseApp(tk.Tk):
         return;
 
     def open_search_window(self):
-        SearchWindow(self, self.db_manager)
+        temp = SearchWindow(self, self.db_manager)
+        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
+        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        animator.open_animation()
+
         return;
 
     def open_stats_window(self):
-        StatsWindow(self, self.db_manager)
+        temp = StatsWindow(self, self.db_manager)
+        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
+        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        animator.open_animation()
+
         return;
 
     def on_closing(self):
@@ -156,8 +165,7 @@ class PublishingHouseApp(tk.Tk):
             messagebox.showerror("Error", f"Table '{table_name}' not found in table_frames!")
             return
 
-        # Switch to that table's tab
-        # One way is to find the index:
+        # Switch to that table's tab by finding the index of the tab
         keys_list = list(self.table_frames.keys())
         index = keys_list.index(table_name)
         self.notebook.select(index + 1) # +1 because the first tab is the "Home" tab!

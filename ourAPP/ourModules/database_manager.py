@@ -14,6 +14,8 @@ class DatabaseManager:
     def open_connection(self):
         if not self.conn:
             self.conn = sqlite3.connect(self.db_path)
+            self.conn.execute("PRAGMA foreign_keys = ON")
+
             self.cursor = self.conn.cursor()
 
         return;
@@ -26,9 +28,13 @@ class DatabaseManager:
             self.cursor = None
 
         return;
-    
+    def ensure_connection(self):
+        if not self.conn:
+            self.open_connection()
+
     def execute(self, query, params=None):
         """Execute a single query with optional parameters."""
+        self.ensure_connection()
         if params is None:
             params = ()
         self.cursor.execute(query, params)
@@ -38,6 +44,7 @@ class DatabaseManager:
     
     def fetchall(self, query, params=None):
         """Execute a query and return all rows."""
+        self.ensure_connection()
         if params is None:
             params = ()
         self.cursor.execute(query, params)
