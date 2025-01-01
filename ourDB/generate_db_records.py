@@ -259,7 +259,7 @@ class PublishingDatabaseManager:
         cursor.executemany(
             'INSERT INTO "contributes" '
             '("Partner_TaxId", "Publication-isbn", "estimated_completion_date", '
-            '"start_date", "completion_date", "payment date") '
+            '"start_date", "completion_date", "payment_date") '
             'VALUES (?, ?, ?, ?, ?, ?)', contributes_data
         )
 
