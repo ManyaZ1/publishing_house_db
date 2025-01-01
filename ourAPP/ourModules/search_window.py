@@ -102,14 +102,6 @@ class SearchWindow(tk.Toplevel):
 
         return;
 
-    def initialize_window(self):
-        (window_width, window_height) = (1200, 700)
-        (screen_width, screen_height) = (self.winfo_screenwidth(), self.winfo_screenheight())
-        (x, y) = ((screen_width // 2) - (window_width // 2), (screen_height // 2) - (window_height // 2))
-        self.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
-        return;
-
     def bring_to_front(self):
         """Bring the window to the front, set focus, and ensure it's visible."""
         self.focus_set()   # Set focus to the window

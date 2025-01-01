@@ -136,18 +136,18 @@ class PublishingHouseApp(tk.Tk):
         return;
 
     def open_search_window(self):
-        temp = SearchWindow(self, self.db_manager)
-        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 700), duration=400)
-        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
-        animator.open_animation()
+        SearchWindow(self, self.db_manager)
+        #animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
+        #temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        #animator.open_animation()
 
         return;
 
     def open_stats_window(self):
-        temp = StatsWindow(self, self.db_manager)
-        animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 700), duration=400)
-        temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
-        animator.open_animation()
+        StatsWindow(self, self.db_manager)
+        #animator = AnimatedWindow(temp, start_size=(100, 100), final_size=(1280, 800), duration=400)
+        #temp.protocol("WM_DELETE_WINDOW", animator.close_animation)
+        #animator.open_animation()
 
         return;
 
@@ -165,8 +165,7 @@ class PublishingHouseApp(tk.Tk):
             messagebox.showerror("Error", f"Table '{table_name}' not found in table_frames!")
             return
 
-        # Switch to that table's tab
-        # One way is to find the index:
+        # Switch to that table's tab by finding the index of the tab
         keys_list = list(self.table_frames.keys())
         index = keys_list.index(table_name)
         self.notebook.select(index + 1) # +1 because the first tab is the "Home" tab!
