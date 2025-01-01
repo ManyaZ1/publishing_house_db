@@ -10,13 +10,14 @@ class TableTab(ttk.Frame):
     """
     Each tab handles CRUD for a single table.
     """
-    def __init__(self, parent_notebook, db_manager, table_name, display_name=None):
+    def __init__(self, parent_notebook, db_manager, table_name, main_app, display_name=None):
         super().__init__(parent_notebook)
         
         self.db_manager = db_manager
         self.table_name = table_name
         self.display_name = display_name or table_name.capitalize() # Use display_name if provided
-        
+        self.main_app = main_app  # Reference to MainApplication instance
+
         # Retrieve columns info
         self.columns_info = self.db_manager.get_table_columns(self.table_name)
         self.col_names = [col[1] for col in self.columns_info]
@@ -69,12 +70,12 @@ class TableTab(ttk.Frame):
         self.unselect_btn.pack(side="left", padx=5)
 
         return;
+
     def create_form_section(self):
         """A frame with Entry widgets for each column (for insert/edit)."""
         self.fields_color= "#fffaf0"# tirquiose "#d6fffd" #name,tax_id labels colors
         self.back_color="#d8d8d6" #background color
 
-        
         # Use tk.LabelFrame instead of ttk.LabelFrame
         self.form_frame = tk.LabelFrame(
             self, 
@@ -118,61 +119,6 @@ class TableTab(ttk.Frame):
                 ent = tk.Entry(self.form_frame, textvariable=var, width=30, bg="white")
 
             ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
-            self.entry_vars[col_name] = var
-
-        # Insert / Update button
-        self.action_btn = ttk.Button(self.form_frame, text="Insert", command=self.insert_record)
-        self.action_btn.grid(row=len(self.columns_info), column=0, columnspan=2, pady=10)
-
-    def create_form_section_og(self):
-        """A frame with Entry widgets for each column (for insert/edit)."""
-        # Apply the style in your main code (usually once in your main application)
-        # style = ttk.Style()
-        # style.theme_use('clam') 
-        # style.configure("Custom.TLabelFrame", background="#d9e8f5", foreground="#333")  # Background and text color
-        # style.configure("Custom.TLabelFrame.Label", background="#d9e8f5", font=("Arial", 10, "bold"))
-
-        # # Update your LabelFrame
-        # self.form_frame = ttk.LabelFrame(self, text=f"{self.display_name} - Insert / Edit Record", padding=10, style="Custom.TLabelFrame")
-        # self.form_frame.pack(side="bottom", fill="x", padx=5, pady=5)
-
-        self.form_frame = ttk.LabelFrame(self, text=f"{self.display_name} - Insert / Edit Record", padding=10)
-        self.form_frame.pack(side="bottom", fill="x", padx=5, pady=5)
-        #self.form_frame = ttk.LabelFrame(self, text="Insert / Edit Record", padding=10, style="Custom.TLabelFrame")
-
-        self.entry_vars = {}
-        
-        # Create a row of labels+entries for each column
-        for index, colinfo in enumerate(self.columns_info):
-            col_name = colinfo[1]
-
-            lbl = ttk.Label(self.form_frame, text=col_name, width=20)
-            lbl.grid(row=index, column=0, padx=5, pady=2, sticky='w')
-
-            var = tk.StringVar()
-            
-            if col_name == "specialisation": # Use a Combobox
-                ent = ttk.Combobox(
-                    self.form_frame,
-                    textvariable=var,
-                    values = get_specialization_display_values(),
-                    state='readonly',
-                    width=28
-                )
-                ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
-            elif col_name == "comments": # Use a Combobox from 1 -> 5
-                ent = ttk.Combobox(
-                    self.form_frame,
-                    textvariable=var,
-                    values = [str(i) for i in range(1, 6)],
-                    state='readonly',
-                    width=28
-                )
-                ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
-            else: # Normal Entry
-                ent = ttk.Entry(self.form_frame, textvariable=var, width=30)
-                ent.grid(row=index, column=1, padx=5, pady=2, sticky='w')
-
             self.entry_vars[col_name] = var
 
         # Insert / Update button
@@ -231,7 +177,7 @@ class TableTab(ttk.Frame):
         try:
             self.db_manager.execute(query, data)
             messagebox.showinfo("Success", "Record inserted successfully.")
-            self.populate_treeview()
+            self.main_app.refresh_all_tabs() # Refresh all tabs to ensure consistency
             self.clear_form()
         except sqlite3.IntegrityError as e:
             messagebox.showerror("Error", f"Insertion failed. IntegrityError: {e}")
@@ -280,7 +226,7 @@ class TableTab(ttk.Frame):
         try:
             self.db_manager.execute(query, params)
             messagebox.showinfo("Success", "Record updated successfully.")
-            self.populate_treeview()
+            self.main_app.refresh_all_tabs()
             self.clear_form()
             # Switch button back to Insert
             self.action_btn.configure(text="Insert", command=self.insert_record)
@@ -321,6 +267,7 @@ class TableTab(ttk.Frame):
             self.db_manager.execute(query, where_params)
             self.tree.delete(selected_item)
             messagebox.showinfo("Success", "Record deleted successfully.")
+            self.main_app.refresh_all_tabs()
             self.clear_form()
         except Exception as e:
             messagebox.showerror("Error", f"Could not delete record.\n{e}")
