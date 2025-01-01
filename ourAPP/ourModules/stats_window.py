@@ -7,6 +7,8 @@ matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 
+from ourModules.translations import SPECIALIZATION_REVERSE_MAP
+
 class StatsWindow(tk.Toplevel):
     """
     A separate Toplevel window for statistics & charts.
@@ -61,7 +63,7 @@ class StatsWindow(tk.Toplevel):
             btn_frame, text="Accounts Payable to Printing House",
             command=lambda:self.plot_chart(
                 '''
-                SELECT strftime('%Y', "order date") AS Year, SUM("cost") AS Total_Payable
+                SELECT strftime('%Y', "order date") AS Year, ROUND(SUM("cost"), 2) AS Total_Payable
                 FROM "order_printing_house"
                 GROUP BY Year
                 ORDER BY Year
@@ -85,6 +87,23 @@ class StatsWindow(tk.Toplevel):
             )
         )
         btn_book_sales.pack(side="left", padx=5)
+
+        # Show Each Author's Sales
+        btn_author_sales = ttk.Button(
+            btn_frame, text="Author Sales",
+            command=lambda:self.plot_chart(
+                f'''
+                SELECT "PARTNER"."name", SUM("client_orders"."quantity") AS Total_Sales
+                FROM ("PARTNER" JOIN "contributes" ON "contributes"."Partner_TaxId" = "PARTNER"."Tax_Id")
+                                 JOIN "client_orders" ON "client_orders"."Publication-isbn" = "contributes"."Publication-isbn"
+                WHERE "PARTNER"."specialisation" = {SPECIALIZATION_REVERSE_MAP["Writer"]}
+                GROUP BY "PARTNER"."Tax_Id"
+                ORDER BY Total_Sales DESC;
+                ''',
+                'Author Name', 'Total Sales', 'Author Sales by (Client) Quantity Orders', 'red'
+            )
+        )
+        btn_author_sales.pack(side="left", padx=5)
         
         # A frame to hold the matplotlib figure
         self.plot_frame = ttk.Frame(container)
@@ -94,19 +113,47 @@ class StatsWindow(tk.Toplevel):
 
         return;
 
+
+    def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
     def plot_chart(self, sql_query, x_label_name, y_label_name, title_name, chart_color):
         """
         A universal chart plotting function.
         """
         try:
             rows = self.db_manager.fetchall(sql_query)
-            x_list = [r[0] if r[0] else "Unknown" for r in rows]
-            y_list = [r[1] if r[1] else 0 for r in rows]
         except Exception as e:
             messagebox.showerror("Data error", f"Could not fetch data:\n\n{type(e).__name__}: {e}")
 
             return;
+    
+        x_list = [r[0] if r[0] else "Unknown" for r in rows]
+        y_list = [r[1] if r[1] else 0 for r in rows]
+    
+        # ----------------- Print the data in a table -----------------
+        max_x_len = max(len(x_label_name), *(len(str(x)) for x in x_list)) if x_list else len(x_label_name)
+        max_y_len = max(len(y_label_name), *(len(str(y)) for y in y_list)) if y_list else len(y_label_name)
+        def make_separator(char="-", corner="+", fill_char="-"):
+            return ( # Helper to create a horizontal line separator
+                corner 
+                + char*(max_x_len + 2) 
+                + corner 
+                + char*(max_y_len + 2) 
+                + corner
+            );
+        # Print title block
+        print("\n" + "=" * (max_x_len + max_y_len + 7))
+        print(f"  {title_name}")
+        print("=" * (max_x_len + max_y_len + 7))
+        
+        header_separator = make_separator() # Print header row
+        print(header_separator)
+        print(f"| {x_label_name.ljust(max_x_len)} | {y_label_name.ljust(max_y_len)} |")
+        print(header_separator)
+        for x_val, y_val in zip(x_list, y_list):
+            print(f"| {str(x_val).ljust(max_x_len)} | {str(y_val).rjust(max_y_len)} |") # Print data rows
+        print(header_separator) # Print bottom border
 
+        # ----------------- Plot the data in a bar chart -----------------
         fig, ax = plt.subplots(figsize=(6,4))
         ax.bar(x_list, y_list, color=chart_color)
         ax.set_xlabel(x_label_name, fontsize=12)

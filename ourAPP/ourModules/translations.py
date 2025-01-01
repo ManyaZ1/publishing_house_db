@@ -70,7 +70,7 @@ def table_to_display(table_name: str) -> str:
     friendly display name (e.g. "Partners").
     Falls back to capitalizing the raw name if not found in TAB_NAME_MAPPING.
     """
-    return TAB_NAME_MAPPING.get(table_name, table_name.capitalize());
+    return TAB_NAME_MAPPING.get(table_name, table_name);
 
 def table_from_display(display_name: str) -> str:
     """
