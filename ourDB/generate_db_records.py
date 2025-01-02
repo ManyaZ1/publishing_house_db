@@ -630,10 +630,13 @@ class PublishingDatabaseManager:
 
         return;
 
-if __name__ == "__main__":
-    #import sqlite3
-
-# Get SQLite version
+def main():
     print("SQLite version:", sqlite3.sqlite_version)
-    manager = PublishingDatabaseManager(scale_factor=3)
+    manager = PublishingDatabaseManager(scale_factor=100)
     manager.run()
+
+    return;
+
+if __name__ == "__main__":
+    main()
+    
