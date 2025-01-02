@@ -2,7 +2,7 @@ from os.path import dirname, abspath, join
 from os import remove
 
 from datetime import datetime, timedelta
-from time import sleep
+from time import sleep, perf_counter
 import sqlite3
 import random
 
@@ -48,17 +48,6 @@ class PublishingDatabaseManager:
         self.categories  = self._read_data_from_file('categories.txt')
         self.locations   = self._read_data_from_file('locations.txt')
         self.book_titles = self._read_data_from_file('book_titles.txt')
-
-        # Placeholders for data that might be reused across methods
-        # (after insertion into DB).
-        self.all_partner_tax_ids = []
-        self.all_client_tax_ids  = []
-        self.all_printing_ids    = []
-        self.all_genre_ids       = []
-        self.all_isbns           = []
-        self.all_isbn_price      = {}
-        self.all_isbn_stock      = {}
-        self.all_isbn_orders_map = {}
 
         return;
 
@@ -155,7 +144,7 @@ class PublishingDatabaseManager:
         connection.commit()
         connection.close()
 
-        print("Database created successfully!")
+        print("Database created successfully!\n")
 
         return;
 
@@ -170,30 +159,50 @@ class PublishingDatabaseManager:
         cursor = connection.cursor()
 
         # ------------------- PARTNER -------------------
+        start_time = perf_counter()
+
         partners = self._generate_partners()
         cursor.executemany(
             'INSERT INTO "PARTNER" ("name", "Tax_Id", "specialisation", "comments") '
             'VALUES (?, ?, ?, ?)', partners
         )
+
+        end_time = perf_counter()
+        print(f"Partner generation took {end_time - start_time:.5f} seconds.")
+
         self.all_partner_tax_ids = self._get_everything(cursor, 'SELECT "Tax_Id" FROM "PARTNER"')
 
         # ------------------- CLIENT --------------------
+        start_time = perf_counter()
+
         clients = self._generate_clients()
         cursor.executemany(
             'INSERT INTO "CLIENT" ("Tax_ID", "name", "location") '
             'VALUES (?, ?, ?)', clients
         )
+
+        end_time = perf_counter()
+        print(f"Client generation took {end_time - start_time:.5f} seconds.")
+
         self.all_client_tax_ids = self._get_everything(cursor, 'SELECT "Tax_ID" FROM "CLIENT"')
 
         # ---------------- PRINTING_HOUSE ---------------
+        start_time = perf_counter()
+
         printing_houses = self._generate_ph()
         cursor.executemany(
             'INSERT INTO "PRINTING_HOUSE" ("p_location", "p_id", "capabilities") '
             'VALUES (?, ?, ?)', printing_houses
         )
+
+        end_time = perf_counter()
+        print(f"Printing house generation took {end_time - start_time:.5f} seconds.")
+
         self.all_printing_ids = self._get_everything(cursor, 'SELECT "p_id" FROM "PRINTING_HOUSE"')
 
         # ------------------- GENRE ---------------------
+        start_time = perf_counter()
+
         # We'll insert one row per category from our file. No scale option!
         genre_data = []
         g_id = 1
@@ -206,14 +215,24 @@ class PublishingDatabaseManager:
             'INSERT INTO "GENRE" ("age_range", "description", "id") '
             'VALUES (?, ?, ?)', genre_data
         )
+
+        end_time = perf_counter()
+        print(f"Genre generation took {end_time - start_time:.5f} seconds.")
+
         self.all_genre_ids = self._get_everything(cursor, 'SELECT "id" FROM "GENRE"')
 
         # ----------------- PUBLICATION -----------------
+        start_time = perf_counter()
+
         publications = self._generate_publications()
         cursor.executemany(
             'INSERT INTO "PUBLICATION" ("title", "isbn", "price", "stock", "genre-id") '
             'VALUES (?, ?, ?, ?, ?)', publications
         )
+
+        end_time = perf_counter()
+        print(f"Publication generation took {end_time - start_time:.5f} seconds.")
+
         self.all_isbns = self._get_everything(cursor, 'SELECT "isbn" FROM "PUBLICATION"')
 
         # Build maps for price & stock per ISBN
@@ -223,6 +242,8 @@ class PublishingDatabaseManager:
         self.all_isbn_stock = {row[0]: row[2] for row in rows}
 
         # ------------------- CONTRACT ------------------
+        start_time = perf_counter()
+
         contracts = self._generate_contracts()
         cursor.executemany(
             'INSERT INTO "CONTRACT" '
@@ -231,14 +252,23 @@ class PublishingDatabaseManager:
             'VALUES (?, ?, ?, ?, ?, ?, ?)', contracts
         )
 
+        end_time = perf_counter()
+        print(f"Contract generation took {end_time - start_time:.5f} seconds.")
+
         # ---------------- CLIENT_ORDERS ---------------
+        start_time = perf_counter()
+
         client_orders = self._generate_client_orders()
         cursor.executemany(
             'INSERT INTO "client_orders" ("order_id", "Client_Tax_ID", "Publication-isbn", "quantity", '
             '"order date", "delivery date", "payment") '
             'VALUES (?,?, ?, ?, ?, ?, ?)', client_orders
         )
-        # Summarize how many copies have been ordered per ISBN
+
+        end_time = perf_counter()
+        print(f"Client order generation took {end_time - start_time:.5f} seconds.")
+
+        # How many copies have been ordered per ISBN
         cursor.execute(
             'SELECT "Publication-isbn", SUM("quantity") '
             'FROM "client_orders" '
@@ -246,7 +276,18 @@ class PublishingDatabaseManager:
         )
         self.all_isbn_orders_map = {row[0]: row[1] for row in cursor.fetchall()}
 
+        # FETCH ONCE (CLIENT -> earliest delivery date) 
+        # Instead of per-row queries in _generate_printing_orders
+        cursor.execute(
+            'SELECT "Publication-isbn", MIN("delivery date") '
+            'FROM "client_orders" '
+            'GROUP BY "Publication-isbn"'
+        )
+        self.min_delivery_date_by_isbn = {row[0]: row[1] for row in cursor.fetchall()}
+
         # ------------ ORDER_PRINTING_HOUSE ------------
+        start_time = perf_counter()
+
         printing_orders = self._generate_printing_orders(cursor)
         cursor.executemany(
             'INSERT INTO "order_printing_house" '
@@ -254,7 +295,20 @@ class PublishingDatabaseManager:
             'VALUES (?,?, ?, ?, ?, ?, ?)', printing_orders
         )
 
+        end_time = perf_counter()
+        print(f"Printing order generation took {end_time - start_time:.5f} seconds.")
+
+        # FETCH ONCE (PRINTING -> earliest printing date)
+        cursor.execute(
+            'SELECT "Publication-isbn", MIN("order date") '
+            'FROM "order_printing_house" '
+            'GROUP BY "Publication-isbn"'
+        )
+        self.min_printing_date_by_isbn = {row[0]: row[1] for row in cursor.fetchall()}
+
         # ---------------- CONTRIBUTES ------------------
+        start_time = perf_counter()
+
         contributes_data = self._generate_contributions(cursor)
         cursor.executemany(
             'INSERT INTO "contributes" '
@@ -263,7 +317,12 @@ class PublishingDatabaseManager:
             'VALUES (?, ?, ?, ?, ?, ?)', contributes_data
         )
 
+        end_time = perf_counter()
+        print(f"Contribution generation took {end_time - start_time:.5f} seconds.")
+
         # --------------- COMMUNICATION ----------------
+        start_time = perf_counter()
+
         # -> CLIENT
         client_contacts = self._generate_communication(self.all_client_tax_ids)
         cursor.executemany(
@@ -283,11 +342,14 @@ class PublishingDatabaseManager:
             'VALUES (?, ?)', printing_contacts
         )
 
+        end_time = perf_counter()
+        print(f"Communication generation took {end_time - start_time:.5f} seconds.")
+
         # Commit changes
         connection.commit()
         connection.close()
 
-        print("Database populated successfully!")
+        print("\nDatabase populated successfully!")
 
         return;
 
@@ -410,7 +472,7 @@ class PublishingDatabaseManager:
         """
         used_client_book_pairs = set()
         client_orders = []
-        order_id=0
+        order_id = 0
         for i in range(self.n_client_orders):
             while True:
                 client_tax_id = random.choice(self.all_client_tax_ids)
@@ -470,17 +532,7 @@ class PublishingDatabaseManager:
             (partner_tax_id, isbn) = key
 
             # Earliest printing date for this ISBN
-            row = cursor.execute(
-                'SELECT MIN("order date") '
-                'FROM "order_printing_house" '
-                'WHERE "Publication-isbn" = ?', (isbn, )
-            ).fetchone()
-            if row and row[0] is not None:
-                earliest_str = row[0]
-                earliest_printing_date = datetime.strptime(earliest_str, "%Y-%m-%d")
-            else:
-                # if there is no printing order, let's allow a large future date
-                earliest_printing_date = datetime(2030, 12, 31)
+            earliest_printing_date = datetime.strptime(self.min_printing_date_by_isbn[isbn], "%Y-%m-%d")
 
             # For each contract window for this pair
             for (cstart, cend) in cstart_end_list:
@@ -539,9 +591,9 @@ class PublishingDatabaseManager:
         Generate the order_printing_house table entries,
         reusing client_orders and publication info from self.*.
         """
-        order_id=0
         used_ph_isbn_pairs = set()
         printing_orders = []
+        order_id = 0
         for chosen_isbn in self.all_isbns:
             #order_id += 1
             # If the ISBN has client orders, we might need more copies
@@ -551,20 +603,15 @@ class PublishingDatabaseManager:
                 partial_quantities = self._random_partition(total_needed, num_partial_orders)
 
                 # Get a reference {MIN} client delivery date to ensure we print on time
-                client_deliv_str = cursor.execute(
-                    'SELECT MIN("delivery date") '
-                    'FROM "client_orders" '
-                    'WHERE "Publication-isbn" = ?', (chosen_isbn,)
-                ).fetchone()[0]
-                client_deliv_date = datetime.strptime(client_deliv_str, "%Y-%m-%d")
+                client_deliv_date = datetime.strptime(self.min_delivery_date_by_isbn[chosen_isbn], "%Y-%m-%d")
 
                 for q in partial_quantities:
                     
-                    while True:
-                        printing_id = random.choice(self.all_printing_ids)
-                        if (printing_id, chosen_isbn) not in used_ph_isbn_pairs:
-                            used_ph_isbn_pairs.add((printing_id, chosen_isbn))
-                            break;
+                    #while True:
+                    printing_id = random.choice(self.all_printing_ids)
+                    #    if (printing_id, chosen_isbn) not in used_ph_isbn_pairs:
+                    #        used_ph_isbn_pairs.add((printing_id, chosen_isbn))
+                    #        break;
 
                     deliver_date = client_deliv_date - timedelta(days=random.randint(1, 60))
                     order_date   = deliver_date - timedelta(days=random.randint(1, 30))
@@ -582,11 +629,11 @@ class PublishingDatabaseManager:
                     ))
             else:
                 # No client orders => we only print the stock once
-                while True:
-                    printing_id = random.choice(self.all_printing_ids)
-                    if (printing_id, chosen_isbn) not in used_ph_isbn_pairs:
-                        used_ph_isbn_pairs.add((printing_id, chosen_isbn))
-                        break;
+                #while True:
+                printing_id = random.choice(self.all_printing_ids)
+                #    if (printing_id, chosen_isbn) not in used_ph_isbn_pairs:
+                #        used_ph_isbn_pairs.add((printing_id, chosen_isbn))
+                #        break;
 
                 order_dt = self._random_date(datetime(2010, 1, 1), datetime(2024, 12, 31))
                 deliver_dt = order_dt + timedelta(days=random.randint(1, 30))
@@ -639,12 +686,14 @@ class PublishingDatabaseManager:
 
 def main():
     print("SQLite version:", sqlite3.sqlite_version)
-    manager = PublishingDatabaseManager(scale_factor=10)
+    manager = PublishingDatabaseManager(scale_factor=1000)
 
+    start = perf_counter()
     manager.run()
+    end = perf_counter()
+    print(f"Total time: {end - start:.5f} seconds.")
 
     return;
 
 if __name__ == "__main__":
     main()
-    
