@@ -635,5 +635,5 @@ if __name__ == "__main__":
 
 # Get SQLite version
     print("SQLite version:", sqlite3.sqlite_version)
-    manager = PublishingDatabaseManager(scale_factor=3)
+    manager = PublishingDatabaseManager(scale_factor=1000)
     manager.run()
