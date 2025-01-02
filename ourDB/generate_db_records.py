@@ -234,9 +234,9 @@ class PublishingDatabaseManager:
         # ---------------- CLIENT_ORDERS ---------------
         client_orders = self._generate_client_orders()
         cursor.executemany(
-            'INSERT INTO "client_orders" ("Client_Tax_ID", "Publication-isbn", "quantity", '
+            'INSERT INTO "client_orders" ("order_id", "Client_Tax_ID", "Publication-isbn", "quantity", '
             '"order date", "delivery date", "payment") '
-            'VALUES (?, ?, ?, ?, ?, ?)', client_orders
+            'VALUES (?,?, ?, ?, ?, ?, ?)', client_orders
         )
         # Summarize how many copies have been ordered per ISBN
         cursor.execute(
@@ -250,8 +250,8 @@ class PublishingDatabaseManager:
         printing_orders = self._generate_printing_orders(cursor)
         cursor.executemany(
             'INSERT INTO "order_printing_house" '
-            '("Printing-id", "Publication-isbn", "order date", "delivery date", "quantity", "cost") '
-            'VALUES (?, ?, ?, ?, ?, ?)', printing_orders
+            '("order_id","Printing-id", "Publication-isbn", "order date", "delivery date", "quantity", "cost") '
+            'VALUES (?,?, ?, ?, ?, ?, ?)', printing_orders
         )
 
         # ---------------- CONTRIBUTES ------------------
@@ -410,6 +410,7 @@ class PublishingDatabaseManager:
         """
         used_client_book_pairs = set()
         client_orders = []
+        order_id=0
         for i in range(self.n_client_orders):
             while True:
                 client_tax_id = random.choice(self.all_client_tax_ids)
@@ -422,8 +423,9 @@ class PublishingDatabaseManager:
             order_date = self._random_date(datetime(2010, 1, 1), datetime(2024, 12, 31))
             delivery_date = order_date + timedelta(days=random.randint(1, 30))
             total_cost = round(self.all_isbn_price[publication_isbn] * quantity, 2)
-
+            order_id += 1
             client_orders.append((
+                order_id,
                 client_tax_id,
                 publication_isbn,
                 quantity,
@@ -537,9 +539,11 @@ class PublishingDatabaseManager:
         Generate the order_printing_house table entries,
         reusing client_orders and publication info from self.*.
         """
+        order_id=0
         used_ph_isbn_pairs = set()
         printing_orders = []
         for chosen_isbn in self.all_isbns:
+            #order_id += 1
             # If the ISBN has client orders, we might need more copies
             if chosen_isbn in self.all_isbn_orders_map:
                 total_needed = self.all_isbn_stock[chosen_isbn] + self.all_isbn_orders_map[chosen_isbn]
@@ -555,6 +559,7 @@ class PublishingDatabaseManager:
                 client_deliv_date = datetime.strptime(client_deliv_str, "%Y-%m-%d")
 
                 for q in partial_quantities:
+                    
                     while True:
                         printing_id = random.choice(self.all_printing_ids)
                         if (printing_id, chosen_isbn) not in used_ph_isbn_pairs:
@@ -565,8 +570,9 @@ class PublishingDatabaseManager:
                     order_date   = deliver_date - timedelta(days=random.randint(1, 30))
                     cost_per_unit = 0.2 * self.all_isbn_price[chosen_isbn]
                     total_cost = round(cost_per_unit * q, 2)
-
+                    order_id += 1
                     printing_orders.append((
+                        order_id,
                         printing_id,
                         chosen_isbn,
                         order_date.strftime("%Y-%m-%d"),
@@ -588,8 +594,9 @@ class PublishingDatabaseManager:
 
                 cost_per_unit = 0.2 * self.all_isbn_price[chosen_isbn]
                 total_cost = round(cost_per_unit * quantity, 2)
-
+                order_id += 1
                 printing_orders.append((
+                    order_id ,
                     printing_id,
                     chosen_isbn,
                     order_dt.strftime("%Y-%m-%d"),
