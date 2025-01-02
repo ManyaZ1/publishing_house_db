@@ -67,13 +67,14 @@ CREATE TABLE IF NOT EXISTS "PUBLICATION" (
             --To id ενός είδους μπορεί να αλλάξει και επιτρέπται να γίνει manually updated από τον χρήστη
 
 CREATE TABLE IF NOT EXISTS "client_orders" (
+	"order_id" integer NOT NULL,
 	"Client_Tax_ID" integer,
 	"Publication-isbn" integer,
 	"quantity" integer,
 	"order date" date,
 	"delivery date" date,
 	"payment" float,
-	PRIMARY KEY ("Client_Tax_ID", "Publication-isbn"),
+	PRIMARY KEY ("order_id"),
 	FOREIGN KEY ("Client_Tax_ID") REFERENCES "CLIENT" ("Tax_ID")
             ON UPDATE RESTRICT  --Δεν επιτρεπεται αλλαγη του Tax_Id του CLIENT
             ON DELETE RESTRICT, -- Δεν θέλουμε να διαγράψουμε έναν πελάτη αν έχει κάνει παραγγελία, ωστε να διατηρήσουμε ιστορικο συναλλαγών
@@ -99,14 +100,15 @@ CREATE TABLE IF NOT EXISTS "contributes" (
 );
 
 CREATE TABLE IF NOT EXISTS "order_printing_house" (
+	"order_id" integer NOT NULL,
 	"Printing-id" integer ,
 	"Publication-isbn" integer, 
-	"order date" date,
+	"order date" date NOT NULL,
 	"delivery date" date,
 	"quantity" integer,
 	"cost" float,
 	--FOREIGN PRIMARY KEY OPOTE ON DELETE SET DEFAULT ΔΕΝ ΣΥΝΙΣΤΑΤΑΙ DUE TO UNIQUNESS CONSTRAINT
-	PRIMARY KEY ("Printing-id", "Publication-isbn","order date"),
+	PRIMARY KEY ("order_id"),
 	FOREIGN KEY ("Printing-id") REFERENCES "PRINTING_HOUSE" ("p_id") --referential integrity constraint
             ON UPDATE RESTRICT --Δεν θέλουμε να αλλάξουμε το p_id του PRINTING_HOUSE οπότε το αποτρέπουμε με το RESTRICT
             ON DELETE RESTRICT ,-- Retain the order, κρατάμε την παραγγελια δεν επιτρέπεται διαγραφή του τυπογραφειου
