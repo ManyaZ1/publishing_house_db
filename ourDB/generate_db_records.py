@@ -639,6 +639,7 @@ class PublishingDatabaseManager:
 
 def main():
     print("SQLite version:", sqlite3.sqlite_version)
+    manager = PublishingDatabaseManager(scale_factor=10)
 
     manager.run()
 
