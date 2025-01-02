@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS "order_printing_house" (
 	"quantity" integer,
 	"cost" float,
 	--FOREIGN PRIMARY KEY OPOTE ON DELETE SET DEFAULT ΔΕΝ ΣΥΝΙΣΤΑΤΑΙ DUE TO UNIQUNESS CONSTRAINT
-	PRIMARY KEY ("Printing-id", "Publication-isbn"),
+	PRIMARY KEY ("Printing-id", "Publication-isbn","order date"),
 	FOREIGN KEY ("Printing-id") REFERENCES "PRINTING_HOUSE" ("p_id") --referential integrity constraint
             ON UPDATE RESTRICT --Δεν θέλουμε να αλλάξουμε το p_id του PRINTING_HOUSE οπότε το αποτρέπουμε με το RESTRICT
             ON DELETE RESTRICT ,-- Retain the order, κρατάμε την παραγγελια δεν επιτρέπεται διαγραφή του τυπογραφειου
