@@ -685,8 +685,8 @@ class PublishingDatabaseManager:
         return;
 
 def main():
-    scale_factor = 1000
-    
+    scale_factor = 10000
+
     print("SQLite version:", sqlite3.sqlite_version)
     manager = PublishingDatabaseManager(scale_factor = scale_factor)
 
