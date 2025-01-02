@@ -685,13 +685,14 @@ class PublishingDatabaseManager:
         return;
 
 def main():
+    scale_factor = 1000
     print("SQLite version:", sqlite3.sqlite_version)
-    manager = PublishingDatabaseManager(scale_factor=1000)
+    manager = PublishingDatabaseManager(scale_factor = scale_factor)
 
     start = perf_counter()
     manager.run()
     end = perf_counter()
-    print(f"Total time: {end - start:.5f} seconds.")
+    print(f"Total time: {end - start:.5f} seconds - Scale factor: {scale_factor}.")
 
     return;
 
