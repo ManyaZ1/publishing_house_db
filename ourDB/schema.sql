@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS "GENRE" (
 CREATE TABLE IF NOT EXISTS "PUBLICATION" (
 	"title" string,
 	"isbn" integer,
-	"price" float,
+	"price" REAL CHECK(typeof(price) = 'real' AND price >= 0) ,  --float would let irregular values in the database
 	"stock" integer,
 	"genre-id" integer,
 	PRIMARY KEY ("isbn"),
