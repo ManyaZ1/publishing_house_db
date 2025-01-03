@@ -1,0 +1,5 @@
+matplotlib
+
+# είναι pre-installed μαζί με την python 3.8
+# tkinter
+# sqlite3
