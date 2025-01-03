@@ -28,3 +28,5 @@ python ourDB\generate_db_records.py
 python ourAPP\main.py
 
 Σημείωση: Σε περιβάλλοντα macOS ή Linux, χρησιμοποιήστε / αντί για \ στις διαδρομές. 
+
+Παραπάνω oδηγίες χρήσης περιλαμβάνονται στην αναφορά στον φάκελο report.
