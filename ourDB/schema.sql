@@ -78,9 +78,9 @@ CREATE TABLE IF NOT EXISTS "client_orders" (
 	"Client_Tax_ID" integer,
 	"Publication-isbn" integer,
 	"quantity" integer,
-	"order date" date,
-	"delivery date" date,
-	"payment" float,
+	"order date" TEXT,
+	"delivery date" TEXT,
+	"payment" REAL CHECK(typeof(payment) = 'real' AND payment >= 0),
 	PRIMARY KEY ("order_id"),
 	FOREIGN KEY ("Client_Tax_ID") REFERENCES "CLIENT" ("Tax_ID")
             ON UPDATE RESTRICT  --Δεν επιτρεπεται αλλαγη του Tax_Id του CLIENT
@@ -88,15 +88,40 @@ CREATE TABLE IF NOT EXISTS "client_orders" (
 	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")
             ON UPDATE RESTRICT  --Δεν επιτρεπεται αλλαγη του isbn του PUBLICATION
             ON DELETE RESTRICT  --Δεν επιτρεπεται διαγραφη βιβλιου με isbn
+	CONSTRAINT 	valid_order_date CHECK(
+        						"order date" LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+        						AND date("order date") IS NOT NULL), -- Validates it as a proper date
+	CONSTRAINT 	valid_delivery_date CHECK( 
+								"delivery date" IS NULL -- Allow NULL values
+								OR(
+								"delivery date" LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+								AND date("delivery date") IS NOT NULL -- Validates it as a proper date
+								AND "delivery date" > "order date") -- Ensures logical consistency
+	)
 );
 
 CREATE TABLE IF NOT EXISTS "contributes" (
 	"Partner_TaxId" integer,
 	"Publication-isbn" integer,
-	"estimated_completion_date" date,
-	"start_date" date,
-	"completion_date" date,
-	"payment_date" date,
+	"start_date" TEXT CHECK(
+		start_date LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+		AND date(start_date) IS NOT NULL -- Validates it as a proper date
+	),
+	"estimated_completion_date" TEXT CHECK(
+		"estimated_completion_date" LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+		AND date("estimated_completion_date") IS NOT NULL -- Validates it as a proper date
+		AND "estimated_completion_date" >= start_date -- Ensures logical consistency
+	),
+	"completion_date" TEXT CHECK(
+		completion_date is NULL -- Allow NULL values
+		OR (
+            "completion_date" LIKE '____-__-__'
+            AND date("completion_date") IS NOT NULL
+            AND "completion_date" >= "start_date"
+        )
+		
+	),
+	"payment_date" TEXT	,
 	PRIMARY KEY ("Partner_TaxId", "Publication-isbn"),
 	FOREIGN KEY ("Partner_TaxId") REFERENCES "PARTNER" ("Tax_Id") --referential integrity constraint
             ON UPDATE RESTRICT --Δεν θέλουμε να αλλάξουμε το Tax_Id του PARTNER οπότε το αποτρέπουμε με το RESTRICT
@@ -104,6 +129,14 @@ CREATE TABLE IF NOT EXISTS "contributes" (
 	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")	--referential integrity constraint
             ON UPDATE RESTRICT --Δεν θέλουμε να αλλάξουμε το isbn του PUBLICATION οπότε το αποτρέπουμε με το RESTRICT
             ON DELETE RESTRICT -- κραταμε το isbn ωστε να σχηματιζει Unique key, δεν επιτρεπεται διαγραφη εντυπου
+	CONSTRAINT valid_payment_date CHECK(
+        "payment_date" IS NULL -- Allow NULL values
+        OR (
+            "payment_date" LIKE '____-__-__'
+            AND date("payment_date") IS NOT NULL
+            AND "payment_date" >= "start_date"
+        )
+    )
 );
 
 CREATE TABLE IF NOT EXISTS "order_printing_house" (
@@ -113,7 +146,7 @@ CREATE TABLE IF NOT EXISTS "order_printing_house" (
 	"order date" date NOT NULL,
 	"delivery date" date,
 	"quantity" integer,
-	"cost" float,
+	"cost" REAL CHECK(typeof(cost) = 'real' AND cost >= 0),
 	--FOREIGN PRIMARY KEY OPOTE ON DELETE SET DEFAULT ΔΕΝ ΣΥΝΙΣΤΑΤΑΙ DUE TO UNIQUNESS CONSTRAINT
 	PRIMARY KEY ("order_id"),
 	FOREIGN KEY ("Printing-id") REFERENCES "PRINTING_HOUSE" ("p_id") --referential integrity constraint
@@ -123,7 +156,17 @@ CREATE TABLE IF NOT EXISTS "order_printing_house" (
 	FOREIGN KEY ("Publication-isbn") REFERENCES "PUBLICATION" ("isbn")	--referential integrity constraint
             ON UPDATE RESTRICT 	--Δεν θέλουμε να αλλάξουμε το isbn του PUBLICATION οπότε το αποτρέπουμε με το RESTRICT
             ON DELETE RESTRICT -- δεν διαγραφεται το εντυπο απο την βαση
-);                              -- ακομα και αν το βιβλιο δεν το προσφερουμε πια, θελουμε τις λεπτομερειες της συναλλαγης
+			-- ακομα και αν το βιβλιο δεν το προσφερουμε πια, θελουμε τις λεπτομερειες της συναλλαγης
+	CONSTRAINT 	valid_order_date_print CHECK(
+        						"order date" LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+        						AND date("order date") IS NOT NULL), -- Validates it as a proper date
+	CONSTRAINT 	valid_delivery_date_print CHECK(
+								"delivery date" IS NULL -- Allow NULL values
+								OR("delivery date" LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+								AND date("delivery date") IS NOT NULL
+								AND date("delivery date")>="order date") -- Validates it as a proper date)
+								)
+);                              
 
 CREATE TABLE IF NOT EXISTS "communication-CLIENT" (
 	"Clinet_Tax_ID" integer,

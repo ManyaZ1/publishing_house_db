@@ -571,7 +571,7 @@ class PublishingDatabaseManager:
             if random.choice([True, False, False]):  # 1/3 chance for NULL
                 payment_date = None
             else:
-                payment_date = completion_date + timedelta(days=random.randint(0, 30))
+                payment_date = completion_date + timedelta(days=random.randint(1, 30))
                 payment_date=payment_date.strftime("%Y-%m-%d")
 
             contributes_data.append((
@@ -685,7 +685,7 @@ class PublishingDatabaseManager:
         return;
 
 def main():
-    scale_factor = 3
+    scale_factor = 1000
 
     print("SQLite version:", sqlite3.sqlite_version)
     manager = PublishingDatabaseManager(scale_factor = scale_factor)
