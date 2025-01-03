@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS "PARTNER" (
 -- οπότε χρησιμοποιούμε το RESTRICT στο ON UPDATE
 
 CREATE TABLE IF NOT EXISTS "CONTRACT" ( 
-	"payment" float,
+	"payment" REAL CHECK(typeof(payment) = 'real' AND payment >= 0) ,
 	"start_date" TEXT CHECK(
         start_date LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
         AND date(start_date) IS NOT NULL -- Validates it as a proper date
