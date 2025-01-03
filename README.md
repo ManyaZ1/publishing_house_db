@@ -13,9 +13,13 @@ git clone https://github.com/ManyaZ1/publishing_house_db
 Αποσυμπιέστε το αρχείο και ανοίξτε ένα τερματικό στο φάκελο.
 
 Τέλος, εκτελέστε τις εξής εντολές στο τερματικό:
+
 cd publishing_house_db 
 
 pip install -r requirements.txt
+
 python ourDB\generate_db_records.py
+
 python ourAPP\main.py
+
 Σημείωση: Σε περιβάλλοντα macOS ή Linux, χρησιμοποιήστε / αντί για \ στις διαδρομές. 
