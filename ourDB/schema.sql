@@ -17,8 +17,15 @@ CREATE TABLE IF NOT EXISTS "PARTNER" (
 
 CREATE TABLE IF NOT EXISTS "CONTRACT" ( 
 	"payment" float,
-	"start_date" date,
-	"expiration_date" date,
+	"start_date" TEXT CHECK(
+        start_date LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+        AND date(start_date) IS NOT NULL -- Validates it as a proper date
+    ),
+	"expiration_date" TEXT CHECK(
+        expiration_date LIKE '____-__-__' -- Matches YYYY-MM-DD pattern
+        AND date(expiration_date) IS NOT NULL -- Validates it as a proper date
+        AND expiration_date > start_date -- Ensures logical consistency
+    ),
 	"id" integer,
 	"description" string,
 	"Partner_Tax_Id" integer NOT NULL, --δεν γινεται να υπαρχει συμβολαιο χωρις συνεργατη με ΑΦΜ
