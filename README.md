@@ -1,5 +1,6 @@
 # publishing_house_db
-data bases 2024-2025 project
+data bases 2024-2025 project:
+
 Για να εκτελεστεί σωστά η εφαρμογή ο χρήστης χρειάζεται να ακολουθήσει τα εξής βήματα:
 Απαιτήσεις:
 Python: Εγκαταστήστε την Python από τον σύνδεσμο https://www.python.org/downloads/.
