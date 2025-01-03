@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS "communication-PARTNER" (
             ON UPDATE RESTRICT --Δεν θέλουμε να αλλάξουμε το Tax_Id του PARTNER οπότε το αποτρέπουμε με το RESTRICT
             ON DELETE CASCADE --Εάν διαγραφεί ένας PARTNER, όλες οι σχετικές εγγραφές στον πίνακα communication-PARTNER διαγράφονται αυτόματα.
 );                   -- Ο συνεργατης μπορει να διαγραφεί μόνο αν δεν εχει καμια σχεση με καποιο συμβολαιο ή συνεισφορα σε εντυπο (contributes)
-
+-- επιτρέπει στον χρήστη διόρθωση των στοιχείων του συνεργάτη πριν συνάψει κάποια παραγγελία/συμφωνία
 CREATE TABLE IF NOT EXISTS "communication-PRINTING" (
 	"Printing-id" integer,
 	"Printing_comm" integer,
