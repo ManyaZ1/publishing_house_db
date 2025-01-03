@@ -31,4 +31,4 @@ python ourAPP\main.py
 
 Παραπάνω oδηγίες χρήσης της εφαρμογής περιλαμβάνονται στην αναφορά στον φάκελο report.
 
-Σημείωση: Για αλλαγή του μεγέθους της randomly-generated βάσης, χρειάζεται αλλαγή του scale_factor που ορίζεται στην main του 
+Σημείωση: Για αλλαγή του μεγέθους της randomly-generated βάσης, χρειάζεται αλλαγή του scale_factor που ορίζεται στην main() του ourDB/generate_db_records.py
