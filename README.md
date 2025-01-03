@@ -10,6 +10,7 @@ Git Bash (προαιρετικό): Για εύκολη λήψη του repositor
 
 Βήματα Εγκατάστασης:
 Αν το Git Bash είναι εγκαταστημένο: git clone https://github.com/ManyaZ1/publishing_house_db
+
 Αλλιώς:
 
 Ακολουθήστε τον σύνδεσμο: github.com/ManyaZ1/publishing_house_db.
