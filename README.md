@@ -11,17 +11,15 @@ Git Bash (optional): Για εύκολη λήψη του repository.
 
 Βήματα Εγκατάστασης:
 1. Clone the repository:
-Αν το Git Bash είναι εγκαταστημένο: `git clone https://github.com/ManyaZ1/publishing_house_db`
-
-Αλλιώς:
-
-Ακολουθήστε τον σύνδεσμο: github.com/ManyaZ1/publishing_house_db.
-Κάντε κλικ στο Code (πράσινο κουμπί) -> επιλέξτε Download ZIP. 
-Αποσυμπιέστε το αρχείο και ανοίξτε ένα τερματικό στο φάκελο.
+   Αν το Git Bash είναι εγκαταστημένο: `git clone https://github.com/ManyaZ1/publishing_house_db`
+   Αλλιώς:
+   Ακολουθήστε τον σύνδεσμο: github.com/ManyaZ1/publishing_house_db.
+   Κάντε κλικ στο Code (πράσινο κουμπί) -> επιλέξτε Download ZIP. 
+   Αποσυμπιέστε το αρχείο και ανοίξτε ένα τερματικό στο φάκελο.
 
 2. Install requirements and generate database:
    
-Τέλος, εκτελέστε τις εξής εντολές στο τερματικό:
+   Τέλος, εκτελέστε τις εξής εντολές στο τερματικό:
 
 ```
 cd publishing_house_db 
