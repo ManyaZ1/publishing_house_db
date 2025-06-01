@@ -27,8 +27,8 @@ pip install -r requirements.txt
 
 python ourDB\generate_db_records.py
 
-python ourAPP\main.py```
-
+python ourAPP\main.py
+```
 
 Σημείωση: Σε περιβάλλοντα macOS ή Linux, χρησιμοποιήστε / αντί για \ στις διαδρομές. 
 
